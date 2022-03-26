@@ -28,11 +28,11 @@
             :key="'MASTERSHEET_' + mastersheet.idMasterSheet"
           >
             <v-card height="280">
-                <div style="float: left; padding: 10px">
-                    <v-btn color="error" large icon>
-                        <v-icon>la-trash</v-icon>
-                    </v-btn>
-                </div>
+              <div style="float: left; padding: 10px">
+                <v-btn color="error" large icon>
+                  <v-icon>la-trash</v-icon>
+                </v-btn>
+              </div>
               <v-card-title>
                 <v-avatar class="white--text" color="primary">
                   {{ mastersheet.studyClass }}
@@ -72,14 +72,18 @@
                     <v-list-item-icon>
                       <v-icon class="primary--text">la-edit</v-icon>
                     </v-list-item-icon>
-                    <v-list-item-title class="primary--text"> ادخال درجات </v-list-item-title>
+                    <v-list-item-title class="primary--text">
+                      ادخال درجات
+                    </v-list-item-title>
                   </v-list-item>
                   <v-divider></v-divider>
                   <v-list-item :to="'mastersheet/' + mastersheet.idMasterSheet">
                     <v-list-item-icon>
                       <v-icon class="success--text">la-print</v-icon>
                     </v-list-item-icon>
-                    <v-list-item-title class="success--text"> توليد مستندات </v-list-item-title>
+                    <v-list-item-title class="success--text">
+                      توليد مستندات
+                    </v-list-item-title>
                   </v-list-item>
                 </v-list>
               </v-card-text>
@@ -87,7 +91,10 @@
           </v-col>
           <v-col cols="3">
             <v-card
-              @click="addNewMasterSheetDialog = true"
+              @click="
+                addNewMasterSheetModal = true;
+                selectedLevel = level.idLevel;
+              "
               class="addNewMasterClass"
               height="280"
             >
@@ -105,6 +112,49 @@
         <br />
       </div>
     </template>
+    <v-dialog v-model="addNewMasterSheetModal" width="600">
+      <v-card>
+        <v-card-title>اضافة ماسترشيت جديد</v-card-title>
+        <br />
+        <v-card-text>
+          <v-autocomplete
+            :items="mastersheetTypes"
+            item-text="masterSheetTypeName"
+            item-value="idMasterSheetType"
+            outlined
+            v-model="masterSheetForm.masterSheetTypeId"
+            label="نوع الماستر"
+          ></v-autocomplete>
+          <v-autocomplete
+            :items="$store.state.studyTypes"
+            item-text="text"
+            item-value="value"
+            outlined
+            v-model="masterSheetForm.studyType"
+            label="الدراسة"
+          ></v-autocomplete>
+          <v-autocomplete
+            :items="$store.state.studentClassess"
+            outlined
+            v-model="masterSheetForm.studyClass"
+            label="الشعبة"
+          ></v-autocomplete>
+          <v-autocomplete
+            :items="$store.state.masterStudyTypes"
+            outlined
+            item-text="text"
+            item-value="value"
+            v-model="masterSheetForm.masterStudyType"
+            label="نظام المرحلة"
+          ></v-autocomplete>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="addNewMasterSheet()" block color="primary"
+            >اضافة</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -113,6 +163,16 @@ export default {
   data: () => ({
     mastersheets: [],
     years: [],
+    selectedLevel: 0,
+    addNewMasterSheetModal: false,
+    mastersheetTypes: [],
+    mastersheetStudyTypes: [],
+    masterSheetForm: {
+      masterSheetTypeId: null,
+      studyType: null,
+      masterStudyType: null,
+      studyClass: null,
+    },
   }),
   created: function () {
     this.fetch();
@@ -132,6 +192,30 @@ export default {
         this.years = res.data;
         this.selectedYear = this.userInfo.yearStudyId;
       });
+
+      this.$http.get("masterSheetTypes").then((res) => {
+        this.mastersheetTypes = res.data;
+      });
+    },
+    addNewMasterSheet() {
+      let loading = this.$loading.show();
+      this.$http
+        .post("addMasterSheet", {
+          sectionId: this.userInfo.sectionId,
+          studyLevel: this.selectedLevel,
+          studyClass: this.masterSheetForm.studyClass,
+          studyYearId: this.selectedYear,
+          studyType: this.masterSheetForm.studyType,
+          masterSheetTypeId: this.masterSheetForm.masterSheetTypeId,
+          masterSheetStudyTypeId: this.masterSheetForm.masterStudyType,
+          materSheetNotice: "",
+          createdBy: this.userInfo.idUser,
+        })
+        .then(() => this.fetch())
+        .finally(() => {
+          loading.hide();
+          this.addNewMasterSheetModal = false;
+        });
     },
   },
   computed: {

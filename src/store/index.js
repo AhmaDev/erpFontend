@@ -47,7 +47,19 @@ export default new Vuex.Store({
       {idDocument: 3 , documentName: 'ميني شيت'},
       {idDocument: 4 , documentName: 'ميني شيت'},
       {idDocument: 2 , documentName: 'ميني شيت'},
-    ]
+    ],
+    studyTypes: [
+      {text: "صباحي", value: "morningStudy"},
+      {text: "مسائي", value: "eveningStudy"},
+    ],
+    masterStudyTypes: [
+      {text: "سنوي", value: 1},
+      {text: "فصلي", value: 2},
+    ],
+    studentStatus: [
+      {text: "مستمر", value: 1},
+      {text: "خروج بأمر اداري", value: 5},
+    ],
   },
   mutations: {
     setLoginInfo: function (state, payload) {

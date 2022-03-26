@@ -4,7 +4,7 @@
       <v-toolbar-title>ماستر شيت</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-select
-        :items="[10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,]"
+        :items="[10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]"
         outlined
         prefix="عدد الطلاب في الصفحة"
         hide-details
@@ -31,7 +31,7 @@
             v-for="(page, pageIndex) in pages"
             :key="'Page_' + pageIndex"
             class="table"
-            style="position: relative;"
+            style="position: relative"
           >
             <v-simple-table
               class="white"
@@ -44,7 +44,7 @@
                   <td style="border: none" :colspan="getAllLessonColSpan() + 4">
                     <v-row>
                       <v-col style="text-align: right">
-                        <img src="@/assets/duc.png" height="50px" alt="">
+                        <img src="@/assets/duc.png" height="50px" alt="" />
                       </v-col>
                       <v-col>
                         <h1>كلية دجلة الجامعة</h1>
@@ -190,13 +190,23 @@
                       <td
                         class="center--text"
                         rowspan="2"
+                        :class="[
+                          getStudentMarkStatus(student, lesson.idLesson, 5) == 4
+                            ? 'blue darken-2 white--text'
+                            : '',
+                        ]"
                         :key="'STUDENT_LESSONS_2_' + lesson.idLesson"
                         v-if="getLessonMark(lesson, 'notFinal') != 0"
                       >
                         <!-- NOT FINAL DEGREE -->
-                        {{
+                        <div v-if="getStudentMarkStatus(student, lesson.idLesson, 5) == 4">
+                          مستوف
+                        </div>
+                        <div v-else>
+                          {{
                           getStundetDegree(student, lesson.idLesson, "notFinal")
                         }}
+                        </div>
                         <!-- NOT FINAL DEGREE -->
                       </td>
                       <td
@@ -214,7 +224,7 @@
                         <!-- FINAL DEGREE -->
                         <template
                           v-if="
-                            [1, 4].includes(
+                            [1].includes(
                               getStudentMarkStatus(student, lesson.idLesson, 5)
                             )
                           "
@@ -286,13 +296,26 @@
                             ) != null
                           "
                         >
-                          {{
-                            getStudentFinalDegree(
-                              student,
-                              lesson.idLesson,
-                              "try1"
-                            )
-                          }}
+                          <div
+                            v-if="
+                              getStudentMarkStatus(
+                                student,
+                                lesson.idLesson,
+                                5
+                              ) == 3
+                            "
+                          >
+                            م
+                          </div>
+                          <div v-else>
+                            {{
+                              getStudentFinalDegree(
+                                student,
+                                lesson.idLesson,
+                                "try1"
+                              )
+                            }}
+                          </div>
                         </template>
                         <!-- TOTAL DEGREE -->
                       </td>
@@ -331,7 +354,7 @@
                         <!-- SECOND FINAL DEGREE -->
                         <template
                           v-if="
-                            [1, 4].includes(
+                            [1].includes(
                               getStudentMarkStatus(student, lesson.idLesson, 6)
                             )
                           "
@@ -428,7 +451,7 @@
             <div v-if="pageIndex == pages.length - 1">
               <pre>{{ mastersheet.materSheetNotice }}</pre>
             </div>
-            <div style="font-size: 10px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; padding: 10px; text-align: center">
               <v-row>
                 <v-col>منظم الشيت</v-col>
                 <v-col>عضو اللجنة الامتحانية</v-col>
@@ -684,7 +707,6 @@ export default {
   page-break-before: always !important;
   page-break-inside: avoid !important;
   page-break-after: avoid !important;
-
 }
 
 #mastersheet tfoot {
@@ -719,7 +741,7 @@ export default {
 }
 
 #mastersheet .table {
-  background-image: url('~@/assets/stamp.png');
+  background-image: url("~@/assets/stamp.png");
   background-size: 40%;
   background-position: center center;
 }
@@ -762,7 +784,7 @@ export default {
   #mastersheet .table {
     padding-bottom: 30px;
     padding-top: 30px;
-    border-bottom: 1px dashed #AAA;
+    border-bottom: 1px dashed #aaa;
   }
 }
 </style>
