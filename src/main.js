@@ -15,7 +15,7 @@ import Print from 'vue-printjs'
 var token = localStorage.getItem('token');
 
 Vue.config.productionTip = false
-Vue.prototype.$baseUrl = 'http://localhost:5088/api/'; // PORTAL BASE_URL
+Vue.prototype.$baseUrl = 'http://10.0.3.55:5088/api/'; // PORTAL BASE_URL
 Vue.prototype.$appVersion = '5.0.0';
 const axiosConfig = {
   headers: { Authorization: `Bearer ${token}` },

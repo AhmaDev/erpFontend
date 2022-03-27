@@ -25,7 +25,7 @@
             </v-subheader>
             <v-divider></v-divider>
             <br />
-            <v-list-item-group v-model="selectedLevel" color="primary">
+            <v-list-item-group color="primary">
               <v-list-item
                 @click="selectLevel(level.idLevel)"
                 v-for="level in $store.state.levels"
@@ -87,7 +87,6 @@
             </v-radio-group>
             <v-list-item-group
               v-if="getLevelType(selectedLevel).length > 0"
-              v-model="selectedLesson"
               color="primary"
             >
               <br />
@@ -176,18 +175,22 @@
                 </v-col>
               </v-row>
               <v-data-table
-                :items="lessons[selectedLesson].marks"
+                :items="
+                  lessons.filter((x) => x.idLesson == selectedLessonId)[0].marks
+                "
                 :headers="marksHeader"
+                v-if="selectedLessonId != null"
               >
                 <template v-slot:[`item.maximumDegree`]="{ item }">
                   <v-text-field
                     hide-details
                     dense
                     :value="item.maximumDegree"
+                    @change="updateDegree($event, item.idLessonMark)"
                     outlined
                   ></v-text-field>
                 </template>
-                <template v-slot:[`item.actions`]="{ item }">
+                <template v-slot:[`item.actions`]="{ item,index }">
                   <v-menu offset-y>
                     <template v-bind="item" v-slot:activator="{ on, attrs }">
                       <v-btn v-bind="attrs" v-on="on" icon>
@@ -195,7 +198,7 @@
                       </v-btn>
                     </template>
                     <v-list>
-                      <v-list-item @click="deleteMark(item.idLessonMark)">
+                      <v-list-item @click="deleteMark(item.idLessonMark, index)">
                         <v-list-item-title
                           >اضغط هنا لتأكيد حذف الدرجة</v-list-item-title
                         >
@@ -298,6 +301,7 @@ export default {
     years: [],
     lessons: [],
     selectedLesson: null,
+    selectedLessonId: null,
     selectedYear: 0,
     selectedLevel: 0,
     levelTypes: [],
@@ -325,7 +329,7 @@ export default {
       let loading = this.$loading.show();
       this.$http
         .get(
-          `lessons?sectionId=${this.userInfo.sectionId}&level=1&&yearStudyId=${this.userInfo.yearStudyId}&order=lessonCredit&sort=DESC`
+          `lessons?sectionId=${this.userInfo.sectionId}&level=1&yearStudyId=${this.userInfo.yearStudyId}&order=lessonCredit&sort=DESC`
         )
         .then((res) => {
           this.lessons = res.data;
@@ -360,11 +364,13 @@ export default {
       let loading = this.$loading.show();
       this.$http
         .get(
-          `lessons?sectionId=${this.userInfo.sectionId}&level=${id}&&yearStudyId=${this.userInfo.yearStudyId}&order=lessonCredit&sort=DESC`
+          `lessons?sectionId=${this.userInfo.sectionId}&level=${id}&yearStudyId=${this.userInfo.yearStudyId}&order=lessonCredit&sort=DESC`
         )
         .then((res) => {
           this.lessons = res.data;
           this.selectedLesson = null;
+          this.selectedLevel = id - 1;
+          this.addNewLessonForm.lessonLevel = id;
         })
         .finally(() => loading.hide());
       this.$http.get("yearStudies").then((res) => {
@@ -374,6 +380,7 @@ export default {
     },
     selectLesson(lesson) {
       var index = this.lessons.findIndex((x) => x.idLesson == lesson.idLesson);
+      this.selectedLessonId = this.lessons[index].idLesson;
       this.selectedLesson = index;
       this.lessonForm = {
         lessonName: lesson.lessonName,
@@ -405,6 +412,7 @@ export default {
               )
               .then((res) => {
                 this.levelTypes = res.data;
+                this.fetch();
               });
           })
           .finally(() => loading.hide());
@@ -428,6 +436,7 @@ export default {
               )
               .then((res) => {
                 this.levelTypes = res.data;
+                this.fetch();
               });
           })
           .finally(() => loading.hide());
@@ -461,7 +470,9 @@ export default {
           });
           this.fetch();
           this.resetForms();
+          this.selectedLesson = null;
           this.addNewLessonDialog = false;
+          this.selectLevel(this.selectedLevel + 1);
         })
         .finally(() => loading.hide());
     },
@@ -486,17 +497,21 @@ export default {
           maximumDegree: 0,
           createdBy: this.userInfo.idUser,
         })
-        .then(() => {
-          this.fetch();
+        .then((res) => {
+          this.lessons[this.selectedLesson].marks.push({
+            ...res.data,
+            markTypeName: this.markTypes.filter((x) => x.idMarkType == id)[0]
+              .markTypeName,
+          });
         })
         .finally(() => loading.hide());
     },
-    deleteMark(id) {
+    deleteMark(id , index) {
       let loading = this.$loading.show();
       this.$http
         .delete("lessonMark/" + id)
         .then(() => {
-          this.fetch();
+          this.lessons[this.selectedLesson].marks.splice(index, 1);
         })
         .finally(() => loading.hide());
     },
@@ -514,7 +529,23 @@ export default {
             message: "تم تعديل معلومات المادة",
             duration: 3000,
           });
-        }).finally(() => this.saveLessonLoading = false);
+        })
+        .finally(() => (this.saveLessonLoading = false));
+    },
+    updateDegree(e, lessonMarkId) {
+      let loading = this.$loading.show();
+      this.$http
+        .put("lessonMark/" + lessonMarkId, {
+          maximumDegree: e,
+        })
+        .then(() => {
+          this.$toast.open({
+            type: "success",
+            message: "تم تعديل معلومات المادة",
+            duration: 3000,
+          });
+        })
+        .finally(() => loading.hide());
     },
   },
   computed: {
