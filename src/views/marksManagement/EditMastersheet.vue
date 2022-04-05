@@ -14,10 +14,21 @@
         v-model="selectedLesson"
       ></v-autocomplete>
       <v-spacer></v-spacer>
-      <v-btn @click="addStudentsModal = true" color="success">
-        اضافة طلاب</v-btn
+      <v-btn
+        @click="
+          noticeModal = true;
+          forceRerender++;
+        "
+        color="primary"
       >
+        <span>الملاحظات</span>
+      </v-btn>
+      &nbsp; &nbsp;
+      <v-btn @click="addStudentsModal = true" color="success">
+        <span>اضافة طلاب</span>
+      </v-btn>
     </v-app-bar>
+    
     <v-card>
       <v-card-text>
         <v-simple-table height="78vh" fixed-header>
@@ -74,17 +85,28 @@
                   >فاينل عملي دور ثاني</v-badge
                 >
               </th>
+              <th width="100px">الاجراءات</th>
             </tr>
           </thead>
           <tbody>
             <tr
-              v-for="student in mastersheet.students"
+              v-for="(student, index) in mastersheet.students"
               :key="student.idStudent"
             >
               <td>
                 {{ student.studentName }}
                 <br />
-                {{ student.studentCollegeNumber }}
+                <span v-if="!student.notice.includes('#')">{{
+                  student.studentCollegeNumber
+                }}</span>
+                <v-chip
+                  v-if="student.notice.includes('#')"
+                  small
+                  color="error"
+                  dark
+                >
+                  محجوب
+                </v-chip>
               </td>
               <td data-marktype="marktype" v-if="!checkField(1)">
                 <v-text-field
@@ -95,7 +117,10 @@
                   outlined
                   dense
                   hide-details
-                  type="number"
+                  type="text"
+                  ref="a"
+                  :rules="[rules.number]"
+                  @keyup="focusing(index, $event, 'a')"
                   :prefix="getMarkStatus(getMark(student, 1).markStatusId)"
                   :max="getLessonMaximumDegree(1)"
                   :min="0"
@@ -121,7 +146,10 @@
                   @contextmenu="
                     showDegreeMenuFunc($event, student.studentId, 2)
                   "
-                  type="number"
+                  type="text"
+                  ref="b"
+                  :rules="[rules.number]"
+                  @keyup="focusing(index, $event, 'b')"
                   :prefix="getMarkStatus(getMark(student, 2).markStatusId)"
                   :max="getLessonMaximumDegree(2)"
                   :min="0"
@@ -147,8 +175,11 @@
                   @contextmenu="
                     showDegreeMenuFunc($event, student.studentId, 3)
                   "
-                  type="number"
-                  :prefix="getMarkStatus(getMark(student, 2).markStatusId)"
+                  type="text"
+                  ref="c"
+                  :rules="[rules.number]"
+                  @keyup="focusing(index, $event, 'c')"
+                  :prefix="getMarkStatus(getMark(student, 3).markStatusId)"
                   :max="getLessonMaximumDegree(3)"
                   :min="0"
                   @change="updateDegree($event, student.studentId, 3)"
@@ -173,7 +204,10 @@
                   @contextmenu="
                     showDegreeMenuFunc($event, student.studentId, 4)
                   "
-                  type="number"
+                  type="text"
+                  ref="d"
+                  :rules="[rules.number]"
+                  @keyup="focusing(index, $event, 'd')"
                   :prefix="getMarkStatus(getMark(student, 4).markStatusId)"
                   :max="getLessonMaximumDegree(4)"
                   :min="0"
@@ -199,7 +233,10 @@
                   @contextmenu="
                     showDegreeMenuFunc($event, student.studentId, 9)
                   "
-                  type="number"
+                  type="text"
+                  ref="e"
+                  :rules="[rules.number]"
+                  @keyup="focusing(index, $event, 'e')"
                   :prefix="getMarkStatus(getMark(student, 9).markStatusId)"
                   :max="getLessonMaximumDegree(9)"
                   :min="0"
@@ -225,7 +262,10 @@
                   @contextmenu="
                     showDegreeMenuFunc($event, student.studentId, 10)
                   "
-                  type="number"
+                  type="text"
+                  ref="f"
+                  :rules="[rules.number]"
+                  @keyup="focusing(index, $event, 'f')"
                   :prefix="getMarkStatus(getMark(student, 10).markStatusId)"
                   :max="getLessonMaximumDegree(10)"
                   :min="0"
@@ -251,7 +291,10 @@
                   @contextmenu="
                     showDegreeMenuFunc($event, student.studentId, 5)
                   "
-                  type="number"
+                  type="text"
+                  ref="g"
+                  :rules="[rules.number]"
+                  @keyup="focusing(index, $event, 'g')"
                   :prefix="getMarkStatus(getMark(student, 5).markStatusId)"
                   :max="getLessonMaximumDegree(5)"
                   :min="0"
@@ -277,7 +320,10 @@
                   @contextmenu="
                     showDegreeMenuFunc($event, student.studentId, 6)
                   "
-                  type="number"
+                  type="text"
+                  ref="h"
+                  :rules="[rules.number]"
+                  @keyup="focusing(index, $event, 'h')"
                   :prefix="getMarkStatus(getMark(student, 6).markStatusId)"
                   :max="getLessonMaximumDegree(6)"
                   :min="0"
@@ -303,7 +349,10 @@
                   @contextmenu="
                     showDegreeMenuFunc($event, student.studentId, 7)
                   "
-                  type="number"
+                  type="text"
+                  ref="i"
+                  :rules="[rules.number]"
+                  @keyup="focusing(index, $event, 'i')"
                   :prefix="getMarkStatus(getMark(student, 7).markStatusId)"
                   :max="getLessonMaximumDegree(7)"
                   :min="0"
@@ -329,7 +378,10 @@
                   @contextmenu="
                     showDegreeMenuFunc($event, student.studentId, 8)
                   "
-                  type="number"
+                  type="text"
+                  ref="j"
+                  :rules="[rules.number]"
+                  @keyup="focusing(index, $event, 'j')"
                   :prefix="getMarkStatus(getMark(student, 8).markStatusId)"
                   :max="getLessonMaximumDegree(8)"
                   :min="0"
@@ -346,6 +398,49 @@
                   "
                 ></v-text-field>
               </td>
+              <td>
+                <v-tooltip
+                  transition="scroll-y-reverse-transition"
+                  top
+                  color="error"
+                >
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-btn
+                      @click="deleteStudent(student)"
+                      color="error"
+                      icon
+                      v-bind="attrs"
+                      v-on="on"
+                    >
+                      <v-icon>la-trash</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>ازالة الطالب من الماستر شيت</span>
+                </v-tooltip>
+                <v-tooltip
+                  transition="scroll-y-reverse-transition"
+                  top
+                  color="black"
+                >
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-btn
+                      @click="
+                        noticeField = student.notice;
+                        addNoticeSelectedStudent = student;
+                        addNoticeModal = true;
+                      "
+                      color="orange"
+                      icon
+                      dark
+                      v-bind="attrs"
+                      v-on="on"
+                    >
+                      <v-icon>la-warning</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>اضافة اوامر ادارية للطالب</span>
+                </v-tooltip>
+              </td>
             </tr>
           </tbody>
         </v-simple-table>
@@ -360,6 +455,16 @@
             block
             @click="changeStatus(status.idMarkStatus)"
             class="my-5"
+            dark
+            :color="
+              status.idMarkStatus == 1
+                ? 'green'
+                : status.idMarkStatus == 2
+                ? 'red'
+                : status.idMarkStatus == 3
+                ? 'warning'
+                : 'dark'
+            "
             v-for="status in markStatus"
             :key="status.idMarkStatus"
           >
@@ -427,6 +532,18 @@
                     item-text="text"
                     item-value="value"
                     :items="$store.state.studentStatus"
+                  ></v-autocomplete>
+                </v-col>
+                <v-col>
+                  <v-autocomplete
+                    outlined
+                    dense
+                    label="الدراسة"
+                    v-model="search.studyType"
+                    @change="searchStudents()"
+                    item-text="text"
+                    item-value="value"
+                    :items="$store.state.masterStudyType"
                   ></v-autocomplete>
                 </v-col>
               </v-row>
@@ -504,6 +621,42 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="addNoticeModal" width="500">
+      <v-card>
+        <v-card-title>اضافة اوامر ادارية</v-card-title>
+        <br />
+        <v-card-text>
+          <v-checkbox
+            v-model="blockStudent"
+            :value="0"
+            label="حجب الطالب"
+          ></v-checkbox>
+          <v-textarea
+            v-model="noticeField"
+            outlined
+            :prepend-icon="blockStudent ? 'la-hashtag' : ''"
+            placeholder="نص الامر الاداري"
+          ></v-textarea>
+          <v-btn block color="success" @click="addNotice()">حفظ</v-btn>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="noticeModal" width="500">
+      <v-card>
+        <v-card-title>ملاحظات الماستر شيت</v-card-title>
+        <br />
+        <v-card-text :key="forceRerender">
+          <v-textarea
+            outlined
+            v-model="mastersheet.masterSheetNotice"
+            placeholder="الملاحظات"
+          ></v-textarea>
+          <v-btn block color="success" @click="addMasterSheetNotice()"
+            >حفظ</v-btn
+          >
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -515,21 +668,34 @@ export default {
     selectedStudent: 0,
     selectedMarkType: 0,
     levelType: 1,
+    blockStudent: 0,
+    noticeField: "",
+    forceRerender: 0,
+    addNoticeSelectedStudent: null,
     showDegreeMenu: false,
     markStatus: [],
     addStudentsModal: false,
+    addNoticeModal: false,
+    noticeModal: false,
     addedStudents: [],
     search: {
       class: null,
       level: null,
       selectedStudents: [],
       status: 1,
+      studyType: 1,
       students: [],
       header: [
         { text: "اسم الطالب", value: "studentName" },
         { text: "الرقم الاحصائي", value: "collegeNumber" },
         { text: "الاجراءات", value: "actions" },
       ],
+    },
+    rules: {
+      number: (v) => {
+        if (!isNaN(parseFloat(v)) && v >= 0 && v <= 100) return true;
+        return "فقط الارقام مسموحة";
+      },
     },
   }),
   created: function () {
@@ -543,6 +709,7 @@ export default {
         this.selectedLesson = this.mastersheet.lessons[0].idLesson;
         this.search.level = this.mastersheet.studyLevel;
         this.search.class = this.mastersheet.studyClass;
+        this.forceRerender++;
         this.searchStudents();
         this.$http
           .get(
@@ -552,6 +719,12 @@ export default {
             if (secondRes.data.length > 0) {
               this.levelType = secondRes.data[0].masterSheetStudyTypeId;
             }
+            this.$toast.open({
+              type: "info",
+              message: "يمكنك استخدام الاسهم للتنقل بين الحقول بسهولة",
+              duration: 5000,
+              position: "bottom",
+            });
           })
           .finally(() => loading.hide());
       });
@@ -653,6 +826,17 @@ export default {
         });
     },
     updateDegree(e, studentId, markType) {
+      let maximumDegree = this.mastersheet.lessons
+        .filter((x) => x.idLesson == this.selectedLesson)[0]
+        .marks.filter((x) => x.markTypeId == markType)[0].maximumDegree;
+      if (e > maximumDegree) {
+        this.$toast.open({
+          type: "error",
+          message: "الدرجة غير صحيحة",
+          duration: 3000,
+        });
+        return;
+      }
       this.$http
         .post("addMasterSheetMark", {
           masterSheetId: this.mastersheet.idMasterSheet,
@@ -663,8 +847,7 @@ export default {
           markStatusId: 1,
           createdBy: this.userInfo.idUser,
         })
-        .then((res) => {
-          console.log(res);
+        .then(() => {
           this.$toast.open({
             type: "success",
             message: "تم تحديث الدرجة",
@@ -699,11 +882,7 @@ export default {
     searchStudents() {
       this.$http
         .get(
-          `students?sectionId=${this.userInfo.sectionId}&level=${
-            this.search.level
-          }&class=${this.search.class}&status=${this.search.status}&studyType=${
-            this.mastersheet.studyType == "eveningStudy" ? 1 : 0
-          }`
+          `students?sectionId=${this.userInfo.sectionId}&level=${this.search.level}&class=${this.search.class}&status=${this.search.status}&studyType=${this.search.studyType}`
         )
         .then((res) => {
           this.search.students = res.data;
@@ -740,6 +919,92 @@ export default {
           this.addedStudents = [];
           this.addStudentsModal = false;
           this.fetch();
+        })
+        .finally(() => loading.hide());
+    },
+    focusing(i, e, ref) {
+      if (e.key == "ArrowDown") {
+        if (this.$refs[ref][i + 1] != null) this.$refs[ref][i + 1].focus();
+      }
+      if (e.key == "ArrowUp") {
+        if (this.$refs[ref][i - 1] != null) this.$refs[ref][i - 1].focus();
+      }
+      if (e.key == "ArrowLeft") {
+        let keys = Object.keys(this.$refs);
+        let refIndex = keys.indexOf(ref);
+        for (let j = refIndex + 1; j < keys.length; j++) {
+          if (this.$refs[keys[j]].length > 0) {
+            this.$refs[keys[j]][i].focus();
+            break;
+          }
+        }
+      }
+      if (e.key == "ArrowRight") {
+        let keys = Object.keys(this.$refs);
+        let refIndex = keys.indexOf(ref);
+        for (let j = refIndex - 1; j >= 0; j--) {
+          if (this.$refs[keys[j]].length > 0) {
+            this.$refs[keys[j]][i].focus();
+            break;
+          }
+        }
+      }
+    },
+    deleteStudent(student) {
+      let c = confirm(
+        "Are you sure you want to remove this student from mastersheet?"
+      );
+      if (c) {
+        let loading = this.$loading.show();
+        this.$http
+          .delete("masterSheetStudent/" + student.idMasterSheetStudent)
+          .then(() => {
+            this.$toast.open({
+              type: "warning",
+              message: "تم حذف الطلاب",
+              duration: 3000,
+            });
+            let index = this.mastersheet.students.indexOf(student);
+            this.mastersheet.students.splice(index, 1);
+          })
+          .finally(() => loading.hide());
+      }
+    },
+    addNotice() {
+      let student = this.addNoticeSelectedStudent;
+      let loading = this.$loading.show();
+      if (this.blockStudent == true) {
+        this.noticeField = "# " + this.noticeField;
+      }
+      this.$http
+        .put("masterSheetStudent/" + student.idMasterSheetStudent, {
+          notice: this.noticeField,
+        })
+        .then(() => {
+          this.$toast.open({
+            type: "success",
+            message: "تم تحديث الطلاب",
+            duration: 3000,
+          });
+          let index = this.mastersheet.students.indexOf(student);
+          this.mastersheet.students[index].notice = this.noticeField;
+          this.addNoticeModal = false;
+        })
+        .finally(() => loading.hide());
+    },
+    addMasterSheetNotice() {
+      let loading = this.$loading.show();
+      this.$http
+        .put("masterSheet/" + this.mastersheet.idMasterSheet, {
+          masterSheetNotice: this.mastersheet.masterSheetNotice,
+        })
+        .then(() => {
+          this.$toast.open({
+            type: "success",
+            message: "تم تحديث الماسترشيت",
+            duration: 3000,
+          });
+          this.noticeModal = false;
         })
         .finally(() => loading.hide());
     },

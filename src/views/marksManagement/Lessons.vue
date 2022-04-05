@@ -143,7 +143,16 @@
                 @click="saveLesson()"
               >
                 <v-icon left>la-check</v-icon>
-                حفظ
+                <span>حفظ</span>
+              </v-btn>
+              <v-btn
+                rounded
+                style="float: right"
+                color="error"
+                @click="deleteLesson()"
+              >
+                <v-icon left>la-trash</v-icon>
+                <span>حذف المادة</span>
               </v-btn>
             </v-col>
             <v-col cols="12">
@@ -190,7 +199,7 @@
                     outlined
                   ></v-text-field>
                 </template>
-                <template v-slot:[`item.actions`]="{ item,index }">
+                <template v-slot:[`item.actions`]="{ item, index }">
                   <v-menu offset-y>
                     <template v-bind="item" v-slot:activator="{ on, attrs }">
                       <v-btn v-bind="attrs" v-on="on" icon>
@@ -198,7 +207,9 @@
                       </v-btn>
                     </template>
                     <v-list>
-                      <v-list-item @click="deleteMark(item.idLessonMark, index)">
+                      <v-list-item
+                        @click="deleteMark(item.idLessonMark, index)"
+                      >
                         <v-list-item-title
                           >اضغط هنا لتأكيد حذف الدرجة</v-list-item-title
                         >
@@ -506,7 +517,7 @@ export default {
         })
         .finally(() => loading.hide());
     },
-    deleteMark(id , index) {
+    deleteMark(id, index) {
       let loading = this.$loading.show();
       this.$http
         .delete("lessonMark/" + id)
@@ -547,6 +558,22 @@ export default {
         })
         .finally(() => loading.hide());
     },
+    deleteLesson() {
+      let c = confirm("Are you sure you want to delete this lesson?");
+      if (c) {
+        let loading = this.$loading.show();
+        this.$http.delete("lesson/" + this.selectedLessonId).then(() => {
+          this.$toast.open({
+            type: "success",
+            message: "تم حذف المادة",
+            duration: 3000,
+          });
+          this.selectedLesson = null;
+          this.selectedLessonId = null;
+          this.fetch();
+        }).finally(() => loading.hide());
+      }
+    }
   },
   computed: {
     isLoggedIn() {

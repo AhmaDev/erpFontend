@@ -60,6 +60,14 @@
               </v-list-item-title>
             </v-list-item-content>
           </v-list-item>
+          <v-list-item @click="logout()">
+            <v-list-item-icon>
+              <v-icon>la-power-off</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title> v{{ $appVersion }} </v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
           <v-list-item>
             <v-list-item-icon>
               <v-icon>la-info-circle</v-icon>
@@ -142,9 +150,9 @@ export default {
     },
   },
   created: function () {
-    let isDarkMode = false;
-    if (localStorage.getItem("darkMode") == "true") {
-      isDarkMode = true;
+    let isDarkMode = true;
+    if (localStorage.getItem("darkMode") == "false") {
+      isDarkMode = false;
     }
     this.$vuetify.theme.dark = isDarkMode;
   },

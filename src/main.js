@@ -11,6 +11,7 @@ import 'line-awesome/dist/line-awesome/css/line-awesome.css'
 import VueToast from 'vue-toast-notification';
 import 'vue-toast-notification/dist/theme-sugar.css';
 import Print from 'vue-printjs'
+import FloatingVue from 'floating-vue'
 
 var token = localStorage.getItem('token');
 
@@ -28,11 +29,16 @@ Vue.prototype.$background = "#2C86FC"
 Vue.use(VuePageTransition);
 Vue.use(Print);
 Vue.use(Loading , {
-  color: Vue.prototype.$background
+  color: "#FFFFFF",
+  backgroundColor: "#00000074",
+  blur: "5px",
+  opacity: 1,
+
 });
 Vue.use(VueToast, {
   position: 'bottom-left',
 });
+Vue.use(FloatingVue)
 new Vue({
   router,
   store,

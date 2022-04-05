@@ -52,6 +52,10 @@ export default new Vuex.Store({
       {text: "صباحي", value: "morningStudy"},
       {text: "مسائي", value: "eveningStudy"},
     ],
+    masterStudyType: [
+      {text: "صباحي", value: 1},
+      {text: "مسائي", value: 0},
+    ],
     masterStudyTypes: [
       {text: "سنوي", value: 1},
       {text: "فصلي", value: 2},

@@ -1,7 +1,13 @@
 <template>
   <div id="mastersheet" class="pa-10">
     <v-app-bar app>
-      <v-toolbar-title>ماستر شيت</v-toolbar-title>
+      <v-toolbar-title>
+        <DocumnetSwitcher
+          v-if="mastersheet != null"
+          type="mastersheet"
+          :id="mastersheet.idMasterSheet"
+        />
+      </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-select
         :items="[10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]"
@@ -14,6 +20,7 @@
         v-model="studentsPerPage"
       ></v-select>
       <v-spacer></v-spacer>
+      
       <v-btn icon @click="print()">
         <v-icon>la-print</v-icon>
       </v-btn>
@@ -52,7 +59,13 @@
                         <h2>{{ mastersheet.yearName }}</h2>
                       </v-col>
                       <v-col style="text-align: left">
-                        <div>المرحلة : {{ mastersheet.studyLevel }}</div>
+                        <div>
+                          {{
+                            $store.state.levels.filter(
+                              (x) => x.idLevel == mastersheet.studyLevel
+                            )[0].levelName
+                          }}
+                        </div>
                         <div>الشعبة : {{ mastersheet.studyClass }}</div>
                         <div>
                           الدراسة :
@@ -191,7 +204,7 @@
                         class="center--text"
                         rowspan="2"
                         :class="[
-                          getStudentMarkStatus(student, lesson.idLesson, 5) == 4
+                          getStudentMarkStatus(student, lesson.idLesson, 1) == 4
                             ? 'blue darken-2 white--text'
                             : '',
                         ]"
@@ -199,13 +212,22 @@
                         v-if="getLessonMark(lesson, 'notFinal') != 0"
                       >
                         <!-- NOT FINAL DEGREE -->
-                        <div v-if="getStudentMarkStatus(student, lesson.idLesson, 5) == 4">
+                        <div
+                          v-if="
+                            getStudentMarkStatus(student, lesson.idLesson, 1) ==
+                            4
+                          "
+                        >
                           مستوف
                         </div>
                         <div v-else>
                           {{
-                          getStundetDegree(student, lesson.idLesson, "notFinal")
-                        }}
+                            getStundetDegree(
+                              student,
+                              lesson.idLesson,
+                              "notFinal"
+                            )
+                          }}
                         </div>
                         <!-- NOT FINAL DEGREE -->
                       </td>
@@ -449,7 +471,7 @@
               </tbody>
             </v-simple-table>
             <div v-if="pageIndex == pages.length - 1">
-              <pre>{{ mastersheet.materSheetNotice }}</pre>
+              <pre>{{ mastersheet.masterSheetNotice }}</pre>
             </div>
             <div style="font-size: 10px; padding: 10px; text-align: center">
               <v-row>
@@ -468,7 +490,11 @@
 </template>
 
 <script>
+import DocumnetSwitcher from "../../components/DocumnetSwitcher.vue";
 export default {
+  components: {
+    DocumnetSwitcher,
+  },
   data: () => ({
     mastersheet: null,
     pages: [
@@ -750,6 +776,10 @@ export default {
     size: A4 landscape;
     scale: 50;
     margin: 20px;
+  }
+  body,
+  html {
+    background-color: #fff !important;
   }
   #mastersheet table * {
     font-size: 9px;

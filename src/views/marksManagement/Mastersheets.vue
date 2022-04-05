@@ -10,26 +10,49 @@
         prefix="السنة الدراسية"
         :items="years"
         item-text="year"
+        disabled
         item-value="idYearStudy"
         v-model="selectedYear"
       ></v-autocomplete>
     </v-app-bar>
     <template v-for="level in $store.state.levels">
       <div :key="'LEVEL_' + level.idLevel">
-        <v-alert rounded dark color="primary">
-          {{ level.levelName }}
+        <v-alert icon="la-book" dense rounded dark color="primary">
+          <v-row>
+            <v-col>
+              <v-chip dark color="primary">
+                {{ level.levelName }}
+              </v-chip>
+            </v-col>
+            <v-col style="text-align: left">
+              <v-chip dark color="blue darken-1">
+                {{
+                  getLevelType(level.idLevel) == 1
+                    ? "النظام السنوي"
+                    : "النظام الفصلي"
+                }}
+              </v-chip>
+            </v-col>
+          </v-row>
         </v-alert>
         <v-row>
           <v-col
-            cols="3"
+            cols="12"
+            md="4"
+            lg="3"
             v-for="mastersheet in mastersheets.filter(
               (x) => x.studyLevel == level.idLevel
             )"
             :key="'MASTERSHEET_' + mastersheet.idMasterSheet"
           >
-            <v-card height="280">
+            <v-card height="320">
               <div style="float: left; padding: 10px">
-                <v-btn color="error" large icon>
+                <v-btn
+                  @click="deleteMaster(mastersheet.idMasterSheet)"
+                  color="error"
+                  large
+                  icon
+                >
                   <v-icon>la-trash</v-icon>
                 </v-btn>
               </div>
@@ -47,13 +70,13 @@
                       <v-icon>la-graduation-cap</v-icon>
                     </v-list-item-icon>
                     <v-list-item-title> الدراسة </v-list-item-title>
-                    <v-list-item-actions>
+                    <v-list-item-action>
                       {{
                         mastersheet.studyType == "morningStudy"
                           ? "صباحي"
                           : "مسائي"
                       }}
-                    </v-list-item-actions>
+                    </v-list-item-action>
                   </v-list-item>
                   <v-divider></v-divider>
                   <v-list-item>
@@ -61,9 +84,23 @@
                       <v-icon>la-chalkboard</v-icon>
                     </v-list-item-icon>
                     <v-list-item-title> نوع الماستر </v-list-item-title>
-                    <v-list-item-actions>
+                    <v-list-item-action>
                       {{ mastersheet.masterSheetTypeName }}
-                    </v-list-item-actions>
+                    </v-list-item-action>
+                  </v-list-item>
+                  <v-divider></v-divider>
+                  <v-list-item v-if="getLevelType(level.idLevel) == 2">
+                    <v-list-item-icon>
+                      <v-icon>la-info-circle</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-title> الفصل </v-list-item-title>
+                    <v-list-item-action>
+                      {{
+                        mastersheet.masterSheetStudyTypeId == 1
+                          ? "الاول"
+                          : "الثاني"
+                      }}
+                    </v-list-item-action>
                   </v-list-item>
                   <v-divider></v-divider>
                   <v-list-item
@@ -89,19 +126,20 @@
               </v-card-text>
             </v-card>
           </v-col>
-          <v-col cols="3">
+          <v-col cols="12" md="4" lg="3">
             <v-card
               @click="
                 addNewMasterSheetModal = true;
                 selectedLevel = level.idLevel;
               "
               class="addNewMasterClass"
-              height="280"
+              height="320"
             >
               <center>
                 <br /><br />
                 <br />
-                <v-icon size="70">la-plus</v-icon>
+                <br />
+                <v-icon size="70">la-plus-circle</v-icon>
                 <br />
                 <br />
                 اضافة ماستر جديد في {{ level.levelName }}
@@ -140,12 +178,12 @@
             label="الشعبة"
           ></v-autocomplete>
           <v-autocomplete
-            :items="$store.state.masterStudyTypes"
+            :items="$store.state.courseTypes"
             outlined
-            item-text="text"
-            item-value="value"
+            item-text="courseName"
+            item-value="idCourse"
             v-model="masterSheetForm.masterStudyType"
-            label="نظام المرحلة"
+            label="الفصل"
           ></v-autocomplete>
         </v-card-text>
         <v-card-actions>
@@ -164,6 +202,8 @@ export default {
     mastersheets: [],
     years: [],
     selectedLevel: 0,
+    selectedYear: 0,
+    levelTypes: [],
     addNewMasterSheetModal: false,
     mastersheetTypes: [],
     mastersheetStudyTypes: [],
@@ -188,6 +228,14 @@ export default {
           this.mastersheets = res.data;
         })
         .finally(() => loading.hide());
+      this.$http
+        .get(
+          `sectionLevelTypes/${this.userInfo.sectionId}?year=${this.userInfo.yearStudyId}`
+        )
+        .then((secondRes) => {
+          this.levelTypes = secondRes.data;
+          console.log("levelTypes", this.levelTypes);
+        });
       this.$http.get("yearStudies").then((res) => {
         this.years = res.data;
         this.selectedYear = this.userInfo.yearStudyId;
@@ -208,7 +256,7 @@ export default {
           studyType: this.masterSheetForm.studyType,
           masterSheetTypeId: this.masterSheetForm.masterSheetTypeId,
           masterSheetStudyTypeId: this.masterSheetForm.masterStudyType,
-          materSheetNotice: "",
+          masterSheetNotice: "",
           createdBy: this.userInfo.idUser,
         })
         .then(() => this.fetch())
@@ -216,6 +264,31 @@ export default {
           loading.hide();
           this.addNewMasterSheetModal = false;
         });
+    },
+    deleteMaster(id) {
+      let c = confirm("Are you sure you want to delete Mastersheet?");
+      if (c) {
+        let loading = this.$loading.show();
+        this.$http
+          .delete("masterSheet/" + id)
+          .then(() => {
+            this.$toast.open({
+              type: "warning",
+              message: "تم حذف الماسترشيت",
+              duration: 3000,
+            });
+            this.fetch();
+          })
+          .finally(() => loading.hide());
+      }
+    },
+    getLevelType(level) {
+      let leveltype = this.levelTypes.filter((x) => x.level == level);
+      if (leveltype.length > 0) {
+        return leveltype[0].masterSheetStudyTypeId;
+      } else {
+        return 1;
+      }
     },
   },
   computed: {
