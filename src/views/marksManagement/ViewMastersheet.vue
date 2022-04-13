@@ -439,7 +439,11 @@
                             student,
                             lesson.idLesson,
                             12
-                          )
+                          ) && getStudentFinalDegree(
+                            student,
+                            lesson.idLesson,
+                            'try2'
+                          ) > 49
                             ? 'yellow darken-2 black--text'
                             : '',
                         ]"

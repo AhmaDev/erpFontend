@@ -10,7 +10,7 @@
         prefix="السنة الدراسية"
         :items="years"
         item-text="year"
-        disabled
+        @change="selectYear($event)"
         item-value="idYearStudy"
         v-model="selectedYear"
       ></v-autocomplete>
@@ -104,6 +104,7 @@
                   </v-list-item>
                   <v-divider></v-divider>
                   <v-list-item
+                  v-if="userInfo.yearStudyId == mastersheet.studyYearId"
                     :to="'mastersheet/edit/' + mastersheet.idMasterSheet"
                   >
                     <v-list-item-icon>
@@ -289,6 +290,25 @@ export default {
       } else {
         return 1;
       }
+    },
+    selectYear(e) {
+      let loading = this.$loading.show();
+      this.$http
+        .get(
+          `masterSheets?sectionId=${this.userInfo.sectionId}&year=${e}&order=studyClass&sort=ASC`
+        )
+        .then((res) => {
+          this.mastersheets = res.data;
+        })
+        .finally(() => loading.hide());
+      this.$http
+        .get(
+          `sectionLevelTypes/${this.userInfo.sectionId}?year=${e}`
+        )
+        .then((secondRes) => {
+          this.levelTypes = secondRes.data;
+          console.log("levelTypes", this.levelTypes);
+        });
     },
   },
   computed: {
