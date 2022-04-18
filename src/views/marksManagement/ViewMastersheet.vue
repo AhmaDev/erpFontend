@@ -66,7 +66,7 @@
                             )[0].levelName
                           }}
                         </div>
-                        <div>الشعبة : {{ mastersheet.studyClass }}</div>
+                        <div>الشعبة : {{ mastersheet.studyClass }} - {{mastersheet.masterSheetTypeName}}</div>
                         <div>
                           الدراسة :
                           {{
@@ -518,6 +518,7 @@ export default {
       this.$http.get("masterSheet/" + this.$route.params.id).then((res) => {
         console.log("MASTER", res.data);
         this.mastersheet = res.data;
+        this.mastersheet.students = this.mastersheet.students.sort((a,b) => a.studentName.localeCompare(b.studentName));
         this.preparePages();
         this.$http
           .get(

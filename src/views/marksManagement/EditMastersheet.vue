@@ -706,6 +706,7 @@ export default {
       let loading = this.$loading.show();
       this.$http.get("masterSheet/" + this.$route.params.id).then((res) => {
         this.mastersheet = res.data;
+        this.mastersheet.students = this.mastersheet.students.sort((a,b) => a.studentName.localeCompare(b.studentName));
         this.selectedLesson = this.mastersheet.lessons[0].idLesson;
         this.search.level = this.mastersheet.studyLevel;
         this.search.class = this.mastersheet.studyClass;
