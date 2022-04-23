@@ -20,7 +20,7 @@
         v-model="studentsPerPage"
       ></v-select>
       <v-spacer></v-spacer>
-      
+
       <v-btn icon @click="print()">
         <v-icon>la-print</v-icon>
       </v-btn>
@@ -66,7 +66,10 @@
                             )[0].levelName
                           }}
                         </div>
-                        <div>الشعبة : {{ mastersheet.studyClass }} - {{mastersheet.masterSheetTypeName}}</div>
+                        <div>
+                          الشعبة : {{ mastersheet.studyClass }} -
+                          {{ mastersheet.masterSheetTypeName }}
+                        </div>
                         <div>
                           الدراسة :
                           {{
@@ -124,6 +127,7 @@
                     <th
                       class="green lighten-5"
                       :key="'LESSON2_CREDITS_' + lesson.idLesson"
+                      v-if="checkIfLessonHasFinalDegree(index)"
                       style="font-size: 9px"
                       width="50px"
                     >
@@ -159,6 +163,7 @@
                     </th>
                     <th
                       class="blue lighten-5"
+                      v-if="checkIfLessonHasFinalDegree(index)"
                       :key="'LESSON_CREDITS3_' + lesson.idLesson"
                     >
                       {{ getLessonMark(lesson, "final") }}
@@ -215,7 +220,9 @@
                         <div
                           v-if="
                             getStudentMarkStatus(student, lesson.idLesson, 1) ==
-                            4
+                              4 ||
+                            getStudentMarkStatus(student, lesson.idLesson, 5) ==
+                              4
                           "
                         >
                           مستوف
@@ -234,12 +241,30 @@
                       <td
                         class="center--text"
                         :key="'STUDENT_LESSONS_' + lesson.idLesson"
+                        v-if="checkIfLessonHasFinalDegree(lessonIndex)"
                         :class="[
                           getStudentMarkStatus(student, lesson.idLesson, 5) == 2
                             ? 'red darken-2 white--text'
                             : '',
                           getStudentMarkStatus(student, lesson.idLesson, 5) == 3
-                            ? 'yellow darken-2 black--text'
+                            ? getStundetDegree(
+                                student,
+                                lesson.idLesson,
+                                'final'
+                              ) +
+                                getStundetDegree(
+                                  student,
+                                  lesson.idLesson,
+                                  'practicalFinal'
+                                ) +
+                                getStundetDegree(
+                                  student,
+                                  lesson.idLesson,
+                                  'notFinal'
+                                ) <
+                              50
+                              ? 'yellow darken-2 black--text'
+                              : 'blue white--text'
                             : '',
                         ]"
                       >
@@ -303,11 +328,34 @@
                             lesson.idLesson,
                             11
                           )
-                            ? 'yellow darken-2 black--text'
+                            ? getStundetDegree(
+                                student,
+                                lesson.idLesson,
+                                'final'
+                              ) +
+                                getStundetDegree(
+                                  student,
+                                  lesson.idLesson,
+                                  'practicalFinal'
+                                ) +
+                                getStundetDegree(
+                                  student,
+                                  lesson.idLesson,
+                                  'notFinal'
+                                ) <
+                              50
+                              ? 'yellow darken-2 black--text'
+                              : 'yellow darken-2 black--text'
                             : '',
                         ]"
                         :key="'STUDENT_LESSONS_4_' + lesson.idLesson"
                       >
+                        <v-chip color="warning" x-small v-if="adminDetails"
+                          >STUDENT ID: {{ student.studentId }}</v-chip
+                        >
+                        <v-chip color="primary" x-small v-if="adminDetails"
+                          >LESSON ID: {{ lesson.idLesson }}</v-chip
+                        >
                         <!-- TOTAL DEGREE -->
                         <template
                           v-if="
@@ -364,6 +412,7 @@
                       <td
                         class="center--text"
                         :key="'STUDENT_LESSONS_5_' + lesson.idLesson"
+                        v-if="checkIfLessonHasFinalDegree(lessonIndex)"
                         :class="[
                           getStudentMarkStatus(student, lesson.idLesson, 6) == 2
                             ? 'red darken-2 white--text'
@@ -439,12 +488,25 @@
                             student,
                             lesson.idLesson,
                             12
-                          ) && getStudentFinalDegree(
-                            student,
-                            lesson.idLesson,
-                            'try2'
-                          ) > 49
-                            ? 'yellow darken-2 black--text'
+                          )
+                            ? getStundetDegree(
+                                student,
+                                lesson.idLesson,
+                                'secondFinal'
+                              ) +
+                                getStundetDegree(
+                                  student,
+                                  lesson.idLesson,
+                                  'secondPracticalFinal'
+                                ) +
+                                getStundetDegree(
+                                  student,
+                                  lesson.idLesson,
+                                  'notFinal'
+                                ) <
+                              50
+                              ? 'yellow darken-2 black--text'
+                              : 'blue darken-2 white--text'
                             : '',
                         ]"
                         :key="'STUDENT_LESSONS_7_' + lesson.idLesson"
@@ -501,6 +563,7 @@ export default {
   },
   data: () => ({
     mastersheet: null,
+    adminDetails: false,
     pages: [
       { start: 0, end: 10 },
       { start: 10, end: 20 },
@@ -518,7 +581,15 @@ export default {
       this.$http.get("masterSheet/" + this.$route.params.id).then((res) => {
         console.log("MASTER", res.data);
         this.mastersheet = res.data;
-        this.mastersheet.students = this.mastersheet.students.sort((a,b) => a.studentName.localeCompare(b.studentName));
+        this.mastersheet.students = this.mastersheet.students.sort((a, b) =>
+          a.studentName.localeCompare(b.studentName)
+        );
+        // SORT LESSONS
+        this.mastersheet.lessons = this.mastersheet.lessons.sort((a, b) => a.lessonCredit - b.lessonCredit);
+        // MOVE PROJECT TO END
+        var projectIndex = this.mastersheet.lessons.findIndex(lesson => lesson.secondLessonName == "Project");
+        this.mastersheet.lessons.push(this.mastersheet.lessons.splice(projectIndex, 1)[0]);
+
         this.preparePages();
         this.$http
           .get(
@@ -535,6 +606,16 @@ export default {
     checkIfLessonHasPracticalFinalDegree(index) {
       if (
         this.mastersheet.lessons[index].marks.filter((x) => x.markTypeId == 7)
+          .length > 0
+      ) {
+        return true;
+      } else {
+        return false;
+      }
+    },
+    checkIfLessonHasFinalDegree(index) {
+      if (
+        this.mastersheet.lessons[index].marks.filter((x) => x.markTypeId == 5)
           .length > 0
       ) {
         return true;
@@ -689,6 +770,7 @@ export default {
     getLessonColSpan(lesson) {
       let colspan = 3;
       if (this.getLessonMark(lesson, "notFinal") == 0) colspan--;
+      if (this.getLessonMark(lesson, "final") == 0) colspan--;
       if (this.getLessonMark(lesson, "practicalFinal") == 0) colspan--;
       return colspan;
     },

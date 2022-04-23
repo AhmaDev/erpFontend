@@ -154,6 +154,12 @@ export default {
         this.mastersheet = res.data;
         this.mastersheet.students = this.mastersheet.students.sort((a,b) => a.studentName.localeCompare(b.studentName));
 
+        // SORT LESSONS
+        this.mastersheet.lessons = this.mastersheet.lessons.sort((a, b) => a.lessonCredit - b.lessonCredit);
+        // MOVE PROJECT TO END
+        var projectIndex = this.mastersheet.lessons.findIndex(lesson => lesson.secondLessonName == "Project");
+        this.mastersheet.lessons.push(this.mastersheet.lessons.splice(projectIndex, 1)[0]);
+
         this.preparePages();
         this.$http
           .get(
