@@ -1,6 +1,6 @@
-import Vue from 'vue';
-import Vuetify from 'vuetify';
-import 'vuetify/dist/vuetify.min.css';
+import Vue from "vue";
+import Vuetify from "vuetify";
+import "vuetify/dist/vuetify.min.css";
 
 Vue.use(Vuetify);
 
@@ -8,27 +8,27 @@ export default new Vuetify({
   rtl: true,
   theme: {
     // dark:true,
-      options: {
-        customProperties: true,
-      },
+    options: {
+      customProperties: true,
+    },
     themes: {
       light: {
-        primary: '#2CA9FC',
-        secondary: '#424242',
-        accent: '#82B1FF',
-        error: '#FF5252',
-        info: '#2196F3',
-        success: '#6FC972',
-        warning: '#FFC107',
-        background: '#FFFFFF',
-        appBackground: '#EEEEEE',
-        ovarlay: '#1B2531',
+        primary: "#2CA9FC",
+        secondary: "#424242",
+        accent: "#82B1FF",
+        error: "#FF5252",
+        info: "#2196F3",
+        success: "#6FC972",
+        warning: "#FFC107",
+        background: "#FFFFFF",
+        appBackground: "#EEEEEE",
+        ovarlay: "#1B2531",
       },
       dark: {
-        background: '#1B2531',
-        appBackground: '#11171F',
-        ovarlay: '#EEEEEE',
-      }
+        background: "#1B2531",
+        appBackground: "#11171F",
+        ovarlay: "#EEEEEE",
+      },
     },
   },
 });

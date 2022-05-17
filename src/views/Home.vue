@@ -12,7 +12,8 @@
                 </h3>
               </v-col>
               <v-col style="text-align: left">
-                <h3>قسم 
+                <h3>
+                  قسم
                   <b>{{ userInfo.sectionName }}</b>
                 </h3>
               </v-col>
@@ -103,6 +104,7 @@
         </v-card>
       </v-col>
     </v-row>
+    <v-btn @click="sendEmail()"> test </v-btn>
   </div>
 </template>
 
@@ -136,6 +138,14 @@ export default {
             this.totalStudents = res.data.length;
           }, 2000);
         });
+    },
+    sendEmail() {
+      for (let i = 200; i < 800; i++) {
+        setTimeout(() => {
+          this.$axios.get("http://localhost:5012/generate/" + i);
+          console.log(i);
+        }, 2000 * i);
+      }
     },
   },
   computed: {

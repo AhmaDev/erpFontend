@@ -3,6 +3,8 @@
     <v-app-bar app>
       <v-toolbar-title>تعديل الدرجات</v-toolbar-title>
       <v-spacer></v-spacer>
+      عدد الطلاب : {{ mastersheet.students.length }}
+      <v-spacer></v-spacer>
       <v-autocomplete
         outlined
         dense
@@ -11,6 +13,7 @@
         :items="mastersheet.lessons"
         item-text="lessonName"
         item-value="idLesson"
+        @change="setQuery()"
         v-model="selectedLesson"
       ></v-autocomplete>
       <v-spacer></v-spacer>
@@ -28,19 +31,21 @@
         <span>اضافة طلاب</span>
       </v-btn>
     </v-app-bar>
-    
+
     <v-card>
       <v-card-text>
         <v-simple-table height="78vh" fixed-header>
           <thead>
             <tr>
+              <th width="20">#</th>
               <th width="300">اسم الطالب والرقم الاحصائي</th>
-              <th width="50" v-if="!checkField(1)">
+              <th width="50">السعي</th>
+              <!--  <th width="50" v-if="!checkField(1)">
                 <v-badge inline :content="getLessonMaximumDegree(1)">
                   نظري
                 </v-badge>
               </th>
-              <th width="50" v-if="!checkField(1) && levelType == 1">
+               <th width="50" v-if="!checkField(1) && levelType == 1">
                 <v-badge inline :content="getLessonMaximumDegree(1)"
                   >نظري فصل ثاني</v-badge
                 >
@@ -64,7 +69,7 @@
                 <v-badge inline :content="getLessonMaximumDegree(10)"
                   >اعمال سنة عملي</v-badge
                 >
-              </th>
+              </th> -->
               <th width="50" v-if="!checkField(5)">
                 <v-badge inline :content="getLessonMaximumDegree(5)"
                   >فاينل</v-badge
@@ -93,6 +98,7 @@
               v-for="(student, index) in mastersheet.students"
               :key="student.idStudent"
             >
+              <td>{{ index + 1 }}</td>
               <td>
                 {{ student.studentName }}
                 <br />
@@ -108,7 +114,15 @@
                   محجوب
                 </v-chip>
               </td>
-              <td data-marktype="marktype" v-if="!checkField(1)">
+              <td>
+                <span v-if="getMark(student, 1).markStatusId != 1">
+                  {{ getMarkStatus(getMark(student, 1).markStatusId) }}
+                </span>
+                <span v-else>
+                  {{ getStundetDegree(student, selectedLesson, "notFinal") }}
+                </span>
+              </td>
+              <!--   <td data-marktype="marktype" v-if="!checkField(1)">
                 <v-text-field
                   @contextmenu="
                     showDegreeMenuFunc($event, student.studentId, 1)
@@ -281,7 +295,7 @@
                       : null
                   "
                 ></v-text-field>
-              </td>
+              </td> -->
               <td v-if="!checkField(5)">
                 <v-text-field
                   tabindex="5"
@@ -312,33 +326,53 @@
                 ></v-text-field>
               </td>
               <td v-if="!checkField(5)">
-                <v-text-field
-                  tabindex="6"
-                  outlined
-                  dense
-                  hide-details
-                  @contextmenu="
-                    showDegreeMenuFunc($event, student.studentId, 6)
-                  "
-                  type="text"
-                  ref="h"
-                  :rules="[rules.number]"
-                  @keyup="focusing(index, $event, 'h')"
-                  :prefix="getMarkStatus(getMark(student, 6).markStatusId)"
-                  :max="getLessonMaximumDegree(6)"
-                  :min="0"
-                  @change="updateDegree($event, student.studentId, 6)"
-                  :class="{
-                    'error white--text': getMark(student, 6).markStatusId == 2,
-                    'warning black--text':
-                      getMark(student, 6).markStatusId == 3,
-                  }"
-                  :value="
-                    getMark(student, 6).markStatusId == 1
-                      ? getMark(student, 6).degree
-                      : null
-                  "
-                ></v-text-field>
+                <v-row>
+                  <v-col>
+                    <v-text-field
+                      tabindex="6"
+                      outlined
+                      dense
+                      hide-details
+                      @contextmenu="
+                        showDegreeMenuFunc($event, student.studentId, 6)
+                      "
+                      type="text"
+                      ref="h"
+                      :rules="[rules.number]"
+                      @keyup="focusing(index, $event, 'h')"
+                      :prefix="getMarkStatus(getMark(student, 6).markStatusId)"
+                      :max="getLessonMaximumDegree(6)"
+                      :min="0"
+                      @change="updateDegree($event, student.studentId, 6)"
+                      :class="{
+                        'error white--text':
+                          getMark(student, 6).markStatusId == 2,
+                        'warning black--text':
+                          getMark(student, 6).markStatusId == 3,
+                      }"
+                      :value="
+                        getMark(student, 6).markStatusId == 1
+                          ? getMark(student, 6).degree
+                          : null
+                      "
+                    ></v-text-field>
+                  </v-col>
+                  <v-col v-if="getMark(student, 6).degree == 0">
+                    <v-btn
+                      @click="
+                        deleteMark(
+                          getMark(student, 6).idMasterSheetMarks,
+                          student,
+                          selectedLesson,
+                          6
+                        )
+                      "
+                      color="error"
+                    >
+                      <span>حذف الدرجة</span>
+                    </v-btn>
+                  </v-col>
+                </v-row>
               </td>
               <td v-if="!checkField(7)">
                 <v-text-field
@@ -465,7 +499,7 @@
                 ? 'warning'
                 : 'dark'
             "
-            v-for="status in markStatus"
+            v-for="status in markStatus.filter((e) => e.idMarkStatus != 4)"
             :key="status.idMarkStatus"
           >
             {{ status.markStatusName }}
@@ -499,6 +533,18 @@
                     .length
                 }}</v-alert
               >
+              <v-row>
+                <v-col>
+                  <v-text-field
+                    outlined
+                    label="اسم الطالب"
+                    dense
+                    hide-details
+                    @keypress.enter="searchStudent($event)"
+                    suffix="اضغط Enter للبحث"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
               <v-row>
                 <v-col>
                   <v-autocomplete
@@ -706,8 +752,14 @@ export default {
       let loading = this.$loading.show();
       this.$http.get("masterSheet/" + this.$route.params.id).then((res) => {
         this.mastersheet = res.data;
-        this.mastersheet.students = this.mastersheet.students.sort((a,b) => a.studentName.localeCompare(b.studentName));
-        this.selectedLesson = this.mastersheet.lessons[0].idLesson;
+        this.mastersheet.students = this.mastersheet.students.sort((a, b) =>
+          a.studentName.localeCompare(b.studentName)
+        );
+        if (this.$route.query.lesson) {
+          this.selectedLesson = parseInt(this.$route.query.lesson);
+        } else {
+          this.selectedLesson = this.mastersheet.lessons[0].idLesson;
+        }
         this.search.level = this.mastersheet.studyLevel;
         this.search.class = this.mastersheet.studyClass;
         this.forceRerender++;
@@ -824,20 +876,48 @@ export default {
             statusId
           );
           this.showDegreeMenu = false;
+          location.reload();
         });
     },
     updateDegree(e, studentId, markType) {
-      let maximumDegree = this.mastersheet.lessons
-        .filter((x) => x.idLesson == this.selectedLesson)[0]
-        .marks.filter((x) => x.markTypeId == markType)[0].maximumDegree;
-      if (e > maximumDegree) {
-        this.$toast.open({
-          type: "error",
-          message: "الدرجة غير صحيحة",
-          duration: 3000,
-        });
-        return;
+      var checkType = markType;
+      if (markType == 6) {
+        checkType = 5;
       }
+      if (markType == 8) {
+        checkType = 7;
+      }
+      let lessonInfo = this.mastersheet.lessons.filter(
+        (x) => x.idLesson == this.selectedLesson
+      );
+      if (lessonInfo.length > 0) {
+        let student = this.mastersheet.students.filter(
+          (e) => e.studentId == studentId
+        )[0];
+        if (this.getMark(student, 1).markStatusId == 1) {
+          let maximumDegree = lessonInfo[0].marks.filter(
+            (x) => x.markTypeId == checkType
+          )[0].maximumDegree;
+          if (e > maximumDegree) {
+            this.$toast.open({
+              type: "error",
+              message: "الدرجة غير صحيحة",
+              duration: 3000,
+            });
+            return;
+          }
+        } else {
+          if (e > 100) {
+            this.$toast.open({
+              type: "error",
+              message: "الدرجة غير صحيحة",
+              duration: 3000,
+            });
+            return;
+          }
+        }
+      }
+
       this.$http
         .post("addMasterSheetMark", {
           masterSheetId: this.mastersheet.idMasterSheet,
@@ -857,7 +937,13 @@ export default {
           this.updateMarksArray(studentId, this.selectedLesson, markType, 1);
         });
     },
-    updateMarksArray(studentId, lessonId, masterSheetMarkTypeId, markStatusId) {
+    updateMarksArray(
+      studentId,
+      lessonId,
+      masterSheetMarkTypeId,
+      markStatusId,
+      isDelete = false
+    ) {
       var marks = this.mastersheet.students.filter(
         (x) => x.studentId == studentId
       )[0].marks;
@@ -878,12 +964,25 @@ export default {
         }
         this.mastersheet.students[studentIndex].marks[markIndex].markStatusId =
           markStatusId;
+
+        if (isDelete) {
+          this.mastersheet.students[studentIndex].marks.splice(markIndex, 1);
+        }
       }
     },
     searchStudents() {
       this.$http
         .get(
           `students?sectionId=${this.userInfo.sectionId}&level=${this.search.level}&class=${this.search.class}&status=${this.search.status}&studyType=${this.search.studyType}`
+        )
+        .then((res) => {
+          this.search.students = res.data;
+        });
+    },
+    searchStudent(e) {
+      this.$http
+        .get(
+          `students?sectionId=${this.userInfo.sectionId}&studentName=${e.target.value}`
         )
         .then((res) => {
           this.search.students = res.data;
@@ -1008,6 +1107,73 @@ export default {
           this.noticeModal = false;
         })
         .finally(() => loading.hide());
+    },
+    getStundetDegree(student, lessonId, markName) {
+      if (this.hideMarks) {
+        return 100;
+      }
+      let marks = student.marks;
+      if (marks == null) {
+        return 0;
+      }
+      if (markName == "notFinal") {
+        return marks
+          .filter((mark) => mark.isFinal == 0 && mark.lessonId == lessonId)
+          .reduce((sum, record) => sum + record.degree, 0);
+      }
+      if (markName == "final") {
+        let finalMark = marks.filter(
+          (mark) => mark.masterSheetMarkTypeId == 5 && mark.lessonId == lessonId
+        );
+        return finalMark.length > 0 ? finalMark[0].degree : null;
+      }
+      if (markName == "secondFinal") {
+        return marks.filter(
+          (mark) => mark.masterSheetMarkTypeId == 6 && mark.lessonId == lessonId
+        ).length > 0
+          ? marks.filter(
+              (mark) =>
+                mark.masterSheetMarkTypeId == 6 && mark.lessonId == lessonId
+            )[0].degree
+          : null;
+      }
+      if (markName == "practicalFinal") {
+        return marks.filter(
+          (mark) => mark.masterSheetMarkTypeId == 7 && mark.lessonId == lessonId
+        ).length > 0
+          ? marks.filter(
+              (mark) =>
+                mark.masterSheetMarkTypeId == 7 && mark.lessonId == lessonId
+            )[0].degree
+          : null;
+      }
+      if (markName == "secondPracticalFinal") {
+        return marks.filter(
+          (mark) => mark.masterSheetMarkTypeId == 8 && mark.lessonId == lessonId
+        ).length > 0
+          ? marks.filter(
+              (mark) =>
+                mark.masterSheetMarkTypeId == 8 && mark.lessonId == lessonId
+            )[0].degree
+          : null;
+      }
+    },
+    deleteMark(markId, student, lesson, markTypeId) {
+      let loading = this.$loading.show();
+      this.$http
+        .delete("masterSheetMark/" + markId)
+        .then(() => {
+          this.$toast.open({
+            type: "warning",
+            message: "تم حذف الدرجة",
+            duration: 3000,
+          });
+          this.updateMarksArray(student.studentId, lesson, markTypeId, 1, true);
+        })
+        .finally(() => loading.hide());
+    },
+    setQuery() {
+      this.$router.push({ query: { lesson: this.selectedLesson } });
     },
   },
   computed: {

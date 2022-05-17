@@ -52,14 +52,31 @@
                   color="error"
                   large
                   icon
+                  v-if="userInfo.yearStudyId == mastersheet.studyYearId"
                 >
                   <v-icon>la-trash</v-icon>
                 </v-btn>
               </div>
               <v-card-title>
-                <v-avatar class="white--text" color="primary">
+                <v-avatar
+                  class="white--text"
+                  :color="
+                    mastersheet.idMasterSheetType == 1 ? 'primary' : 'warning'
+                  "
+                >
                   {{ mastersheet.studyClass }}
                 </v-avatar>
+                <v-spacer></v-spacer>
+                <h4
+                  :class="
+                    mastersheet.idMasterSheetType != 1
+                      ? 'warning--text'
+                      : 'primary--text'
+                  "
+                >
+                  {{ mastersheet.masterSheetTypeName }}
+                </h4>
+                <v-spacer></v-spacer>
               </v-card-title>
               <v-card-text>
                 <v-list dense>
@@ -79,16 +96,6 @@
                     </v-list-item-action>
                   </v-list-item>
                   <v-divider></v-divider>
-                  <v-list-item>
-                    <v-list-item-icon>
-                      <v-icon>la-chalkboard</v-icon>
-                    </v-list-item-icon>
-                    <v-list-item-title> نوع الماستر </v-list-item-title>
-                    <v-list-item-action>
-                      {{ mastersheet.masterSheetTypeName }}
-                    </v-list-item-action>
-                  </v-list-item>
-                  <v-divider></v-divider>
                   <v-list-item v-if="getLevelType(level.idLevel) == 2">
                     <v-list-item-icon>
                       <v-icon>la-info-circle</v-icon>
@@ -104,7 +111,7 @@
                   </v-list-item>
                   <v-divider></v-divider>
                   <v-list-item
-                  v-if="userInfo.yearStudyId == mastersheet.studyYearId"
+                    v-if="userInfo.yearStudyId == mastersheet.studyYearId"
                     :to="'mastersheet/edit/' + mastersheet.idMasterSheet"
                   >
                     <v-list-item-icon>
@@ -302,9 +309,7 @@ export default {
         })
         .finally(() => loading.hide());
       this.$http
-        .get(
-          `sectionLevelTypes/${this.userInfo.sectionId}?year=${e}`
-        )
+        .get(`sectionLevelTypes/${this.userInfo.sectionId}?year=${e}`)
         .then((secondRes) => {
           this.levelTypes = secondRes.data;
           console.log("levelTypes", this.levelTypes);

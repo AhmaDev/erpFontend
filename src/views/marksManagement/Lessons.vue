@@ -218,7 +218,19 @@
                   </v-menu>
                 </template>
               </v-data-table>
-              <h4>
+              <h4
+                v-if="
+                  getLevelType(selectedLevel)[0].masterSheetStudyTypeId == 1
+                "
+              >
+                المجموع النهائي :
+                {{ getLessonTotalDegree(lessons[selectedLesson].marks) }}
+              </h4>
+              <h4
+                v-if="
+                  getLevelType(selectedLevel)[0].masterSheetStudyTypeId == 2
+                "
+              >
                 المجموع النهائي :
                 {{
                   lessons[selectedLesson].marks
@@ -526,6 +538,17 @@ export default {
         })
         .finally(() => loading.hide());
     },
+    getLessonTotalDegree(lesson) {
+      let total = 0;
+      for (let i = 0; i < lesson.length; i++) {
+        if (lesson[i].markTypeId == 1 || lesson[i].markTypeId == 3) {
+          total = total + lesson[i].maximumDegree + lesson[i].maximumDegree;
+        } else {
+          total = total + lesson[i].maximumDegree;
+        }
+      }
+      return total;
+    },
     saveLesson() {
       this.saveLessonLoading = true;
       this.$http
@@ -562,18 +585,21 @@ export default {
       let c = confirm("Are you sure you want to delete this lesson?");
       if (c) {
         let loading = this.$loading.show();
-        this.$http.delete("lesson/" + this.selectedLessonId).then(() => {
-          this.$toast.open({
-            type: "success",
-            message: "تم حذف المادة",
-            duration: 3000,
-          });
-          this.selectedLesson = null;
-          this.selectedLessonId = null;
-          this.fetch();
-        }).finally(() => loading.hide());
+        this.$http
+          .delete("lesson/" + this.selectedLessonId)
+          .then(() => {
+            this.$toast.open({
+              type: "success",
+              message: "تم حذف المادة",
+              duration: 3000,
+            });
+            this.selectedLesson = null;
+            this.selectedLessonId = null;
+            this.fetch();
+          })
+          .finally(() => loading.hide());
       }
-    }
+    },
   },
   computed: {
     isLoggedIn() {

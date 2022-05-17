@@ -18,6 +18,7 @@ export default {
     items: [
       { title: "ماستر شيت", value: "mastersheet" },
       { title: "النتائج دور اول", value: "finalMarks" },
+      { title: "التقارير دور اول", value: "reports" },
     ],
   }),
 };
