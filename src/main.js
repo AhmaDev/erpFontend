@@ -12,6 +12,7 @@ import VueToast from "vue-toast-notification";
 import "vue-toast-notification/dist/theme-sugar.css";
 import Print from "vue-printjs";
 import FloatingVue from "floating-vue";
+import Tafqeet from "vue-tafqeet";
 
 var token = localStorage.getItem("token");
 
@@ -38,6 +39,7 @@ Vue.use(VueToast, {
   position: "bottom-left",
 });
 Vue.use(FloatingVue);
+Vue.use(Tafqeet);
 new Vue({
   router,
   store,

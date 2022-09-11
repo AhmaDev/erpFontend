@@ -6,13 +6,13 @@
       <v-toolbar-title>
         <DocumnetSwitcher
           v-if="mastersheet != null"
-          type="mastersheet"
+          type="minisheet"
           :id="mastersheet.idMasterSheet"
         />
       </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-select
-        :items="[10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]"
+        :items="[10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 1000]"
         outlined
         prefix="عدد الطلاب في الصفحة"
         hide-details
@@ -22,18 +22,21 @@
         v-model="studentsPerPage"
       ></v-select>
       <v-spacer></v-spacer>
-      <v-btn plain @click="hideMarks = true" v-if="!hideMarks">
+      <!-- <v-btn plain @click="hideMarks = true" v-if="!hideMarks">
         اخفاء الدرجات
       </v-btn>
       <v-btn plain @click="hideMarks = false" v-if="hideMarks">
         اظهار الدرجات
-      </v-btn>
+      </v-btn> -->
       <v-btn
         @click="merge()"
         color="success"
         v-if="mastersheet.masterSheetStudyTypeId != 1"
         >دمج</v-btn
       >
+      <v-btn icon @click="tablesToExcel()">
+        <v-icon>la-download</v-icon>
+      </v-btn>
       <v-btn icon @click="print()">
         <v-icon>la-print</v-icon>
       </v-btn>
@@ -58,48 +61,52 @@
               border="1"
               cellspacing="0"
               width="100%"
+              id="MsoNormalTable"
             >
               <thead>
                 <tr>
-                  <td style="border: none" :colspan="getAllLessonColSpan() + 4">
-                    <v-row>
-                      <v-col style="text-align: right">
-                        <img src="@/assets/duc.png" height="50px" alt="" />
-                      </v-col>
-                      <v-col>
-                        <h1>كلية دجلة الجامعة</h1>
-                        <h1>قسم {{ mastersheet.sectionName }}</h1>
-                        <h2>{{ mastersheet.yearName }}</h2>
-                      </v-col>
-                      <v-col style="text-align: left">
-                        <div>
-                          {{
-                            $store.state.levels.filter(
-                              (x) => x.idLevel == mastersheet.studyLevel
-                            )[0].levelName
-                          }}
-                        </div>
-                        <div>
-                          الشعبة : {{ mastersheet.studyClass }} -
-                          {{ mastersheet.masterSheetTypeName }}
-                        </div>
-                        <div>
-                          الدراسة :
-                          {{
-                            mastersheet.studyType == "morningStudy"
-                              ? "الصباحية"
-                              : "المسائية"
-                          }}
-                        </div>
-                        <div v-if="levelType == 2">
-                          {{
-                            mastersheet.masterSheetStudyTypeId == 1
-                              ? "الفصل الاول"
-                              : "الفصل الثاني"
-                          }}
-                        </div>
-                      </v-col>
-                    </v-row>
+                  <td style="border: none">
+                    <h1>كلية دجلة الجامعة</h1>
+                  </td>
+                  <td style="border: none">
+                    <h1>{{ mastersheet.sectionName }}</h1>
+                  </td>
+                  <td style="border: none">
+                    <h2>{{ mastersheet.yearName }}</h2>
+                  </td>
+                  <td style="border: none">
+                    <div>
+                      {{
+                        $store.state.levels.filter(
+                          (x) => x.idLevel == mastersheet.studyLevel
+                        )[0].levelName
+                      }}
+                    </div>
+                  </td>
+                  <td style="border: none">
+                    <div>
+                      الشعبة : {{ mastersheet.studyClass }} -
+                      {{ mastersheet.masterSheetTypeName }}
+                    </div>
+                  </td>
+                  <td style="border: none">
+                    <div>
+                      الدراسة :
+                      {{
+                        mastersheet.studyType == "morningStudy"
+                          ? "الصباحية"
+                          : "المسائية"
+                      }}
+                    </div>
+                  </td>
+                  <td style="border: none">
+                    <div v-if="levelType == 2">
+                      {{
+                        mastersheet.masterSheetStudyTypeId == 1
+                          ? "الفصل الاول"
+                          : "الفصل الثاني"
+                      }}
+                    </div>
                   </td>
                 </tr>
                 <tr>
@@ -109,8 +116,9 @@
                   <template v-for="lesson in mastersheet.lessons">
                     <th
                       :key="'LESSON1_NAME_' + lesson.idLesson"
-                      :colspan="getLessonColSpan(lesson)"
+                      :colspan="1"
                       class="grey lighten-3"
+                      width="80"
                     >
                       {{ lesson.lessonName }}
                     </th>
@@ -121,82 +129,41 @@
                       {{ lesson.lessonCredit }}
                     </th>
                   </template>
+                  <th width="50" rowspan="3">المعدل العام</th>
+                  <th width="50" rowspan="3">التقدير العام</th>
+                  <th width="50" rowspan="3">النتيجة</th>
                   <th rowspan="3">الملاحظات</th>
                 </tr>
                 <tr>
                   <th class="grey lighten-3" colspan="2" rowspan="2">
                     اسم الطالب و الرقم الجامعي
                   </th>
-                  <template v-for="(lesson, index) in mastersheet.lessons">
-                    <th
-                      v-if="getLessonMark(lesson, 'notFinal') != 0"
-                      :key="'LESSON2_NAME_' + lesson.idLesson"
-                      class="green lighten-5"
-                      style="font-size: 9px"
-                      width="50px"
-                    >
-                      السعي
-                    </th>
+                  <template v-for="lesson in mastersheet.lessons">
                     <th
                       class="green lighten-5"
                       :key="'LESSON2_CREDITS_' + lesson.idLesson"
-                      v-if="checkIfLessonHasFinalDegree(index)"
                       style="font-size: 9px"
-                      width="50px"
-                    >
-                      الامتحان النهائي
-                    </th>
-                    <th
-                      class="green lighten-5"
-                      v-if="checkIfLessonHasPracticalFinalDegree(index)"
-                      :key="'LESSON_FINAL_PR_' + lesson.idLesson"
-                      style="font-size: 9px"
-                      width="50px"
-                    >
-                      عملي نهائي
-                    </th>
-                    <th
-                      class="green lighten-5"
-                      :key="'LESSON_FINAL_' + lesson.idLesson"
-                      style="font-size: 9px"
-                      width="50px"
+                      colspan="2"
                     >
                       الدرجة النهائية
                     </th>
                   </template>
                 </tr>
                 <tr>
-                  <template v-for="(lesson, index) in mastersheet.lessons">
+                  <template v-for="lesson in mastersheet.lessons">
                     <th
-                      class="blue lighten-5"
-                      v-if="getLessonMark(lesson, 'notFinal') != 0"
-                      :key="'LESSON_NAME3_' + lesson.idLesson"
+                      class="green lighten-5"
+                      :key="'LESSON2_CREDITS_' + lesson.idLesson"
+                      style="font-size: 9px"
                     >
-                      {{ getLessonMark(lesson, "notFinal") }}
+                      رقماً
                     </th>
                     <th
-                      class="blue lighten-5"
-                      v-if="checkIfLessonHasFinalDegree(index)"
-                      :key="'LESSON_CREDITS3_' + lesson.idLesson"
+                      class="green lighten-5"
+                      :key="'LESSON_FINAL_' + lesson.idLesson"
+                      style="font-size: 9px"
                     >
-                      {{ getLessonMark(lesson, "final") }}
-                    </th>
-                    <th
-                      class="blue lighten-5"
-                      v-if="checkIfLessonHasPracticalFinalDegree(index)"
-                      :key="'LESSON_CREDITS4_' + lesson.idLesson"
-                    >
-                      {{ getLessonMark(lesson, "practicalFinal") }}
-                    </th>
-                    <th
-                      class="blue lighten-5"
-                      :key="'LESSON_CREDITS5_' + lesson.idLesson"
-                    >
-                      {{
-                        getLessonMark(lesson, "notFinal") +
-                        getLessonMark(lesson, "final") +
-                        getLessonMark(lesson, "practicalFinal")
-                      }}
+                      كتابةً
                     </th>
                   </template>
                 </tr>
@@ -215,234 +182,7 @@
                   </td>
                   <td style="white-space: nowrap">{{ student.studentName }}</td>
                   <template v-if="!student.notice.includes('#')">
-                    <template
-                      v-for="(lesson, lessonIndex) in mastersheet.lessons"
-                    >
-                      <td
-                        class="center--text"
-                        rowspan="2"
-                        :class="[
-                          getStudentMarkStatus(student, lesson.idLesson, 1) == 4
-                            ? ''
-                            : '',
-                        ]"
-                        :key="'STUDENT_LESSONS_2_' + lesson.idLesson"
-                        v-if="getLessonMark(lesson, 'notFinal') != 0"
-                      >
-                        <!-- NOT FINAL DEGREE -->
-
-                        <div
-                          v-if="
-                            getStudentMarkStatus(student, lesson.idLesson, 1) ==
-                              4 ||
-                            getStudentMarkStatus(student, lesson.idLesson, 5) ==
-                              4
-                          "
-                        >
-                          مستوف
-                        </div>
-                        <div v-else>
-                          <template
-                            v-if="
-                              student.marks.filter(
-                                (e) => e.lessonId == lesson.idLesson
-                              ).length == 0
-                            "
-                          >
-                          </template>
-                          <template v-else>
-                            {{
-                              getStundetDegree(
-                                student,
-                                lesson.idLesson,
-                                "notFinal"
-                              )
-                            }}
-                          </template>
-                        </div>
-
-                        <!-- NOT FINAL DEGREE -->
-                      </td>
-                      <td
-                        class="center--text"
-                        :key="'STUDENT_LESSONS_' + lesson.idLesson"
-                        v-if="checkIfLessonHasFinalDegree(lessonIndex)"
-                        :class="[
-                          getStudentMarkStatus(student, lesson.idLesson, 5) == 2
-                            ? 'red darken-2 white--text'
-                            : '',
-                          getStudentMarkStatus(student, lesson.idLesson, 5) == 3
-                            ? getStundetDegree(
-                                student,
-                                lesson.idLesson,
-                                'final'
-                              ) +
-                                getStundetDegree(
-                                  student,
-                                  lesson.idLesson,
-                                  'practicalFinal'
-                                ) +
-                                getStundetDegree(
-                                  student,
-                                  lesson.idLesson,
-                                  'notFinal'
-                                ) <
-                              50
-                              ? 'yellow darken-2 black--text'
-                              : 'blue white--text'
-                            : '',
-                        ]"
-                      >
-                        <!-- FINAL DEGREE -->
-                        <template v-if="!hideMarks">
-                          <template
-                            v-if="
-                              [1].includes(
-                                getStudentMarkStatus(
-                                  student,
-                                  lesson.idLesson,
-                                  5
-                                )
-                              )
-                            "
-                          >
-                            <div
-                              v-if="
-                                getStudentMarkStatus(
-                                  student,
-                                  lesson.idLesson,
-                                  1
-                                ) == 4 ||
-                                getStudentMarkStatus(
-                                  student,
-                                  lesson.idLesson,
-                                  5
-                                ) == 4
-                              "
-                            ></div>
-                            <div v-else>
-                              {{
-                                getStundetDegree(
-                                  student,
-                                  lesson.idLesson,
-                                  "final"
-                                )
-                              }}
-                            </div>
-                          </template>
-                          <template
-                            v-if="
-                              getStudentMarkStatus(
-                                student,
-                                lesson.idLesson,
-                                5
-                              ) == 2
-                            "
-                            >غائب
-                          </template>
-                          <template
-                            v-if="
-                              getStudentMarkStatus(
-                                student,
-                                lesson.idLesson,
-                                5
-                              ) == 3
-                            "
-                            >مؤجل
-                          </template>
-                        </template>
-                        <!-- FINAL DEGREE -->
-                      </td>
-                      <td
-                        class="center--text"
-                        :class="[
-                          getStudentMarkStatus(student, lesson.idLesson, 7) == 2
-                            ? 'red darken-2 white--text'
-                            : '',
-                          getStudentMarkStatus(student, lesson.idLesson, 7) == 3
-                            ? getStundetDegree(
-                                student,
-                                lesson.idLesson,
-                                'final'
-                              ) +
-                                getStundetDegree(
-                                  student,
-                                  lesson.idLesson,
-                                  'practicalFinal'
-                                ) +
-                                getStundetDegree(
-                                  student,
-                                  lesson.idLesson,
-                                  'notFinal'
-                                ) <
-                              50
-                              ? 'yellow darken-2 black--text'
-                              : 'blue white--text'
-                            : '',
-                        ]"
-                        v-if="checkIfLessonHasPracticalFinalDegree(lessonIndex)"
-                        :key="'STUDENT_LESSONS_3_' + lesson.idLesson"
-                      >
-                        <!-- PRACTICAL FINAL DEGREE -->
-                        <template v-if="!hideMarks">
-                          <template
-                            v-if="
-                              [1].includes(
-                                getStudentMarkStatus(
-                                  student,
-                                  lesson.idLesson,
-                                  7
-                                )
-                              )
-                            "
-                          >
-                            <div
-                              v-if="
-                                getStudentMarkStatus(
-                                  student,
-                                  lesson.idLesson,
-                                  1
-                                ) == 4 ||
-                                getStudentMarkStatus(
-                                  student,
-                                  lesson.idLesson,
-                                  7
-                                ) == 4
-                              "
-                            ></div>
-                            <div v-else>
-                              {{
-                                getStundetDegree(
-                                  student,
-                                  lesson.idLesson,
-                                  "practicalFinal"
-                                )
-                              }}
-                            </div>
-                          </template>
-                          <template
-                            v-if="
-                              getStudentMarkStatus(
-                                student,
-                                lesson.idLesson,
-                                7
-                              ) == 2
-                            "
-                            >غائب
-                          </template>
-                          <template
-                            v-if="
-                              getStudentMarkStatus(
-                                student,
-                                lesson.idLesson,
-                                7
-                              ) == 3
-                            "
-                            >مؤجل
-                          </template>
-                        </template>
-                        <!-- PRACTICAL FINAL DEGREE -->
-                      </td>
+                    <template v-for="lesson in mastersheet.lessons">
                       <td
                         class="center--text"
                         v-bind:class="[
@@ -570,8 +310,80 @@
                         </template>
                         <!-- TOTAL DEGREE -->
                       </td>
+                      <td
+                        class="center--text"
+                        :key="'STUDENT_LESSONS_4_' + lesson.idLesson"
+                      >
+                        <v-chip color="warning" x-small v-if="adminDetails"
+                          >STUDENT ID: {{ student.studentId }}</v-chip
+                        >
+                        <v-chip color="primary" x-small v-if="adminDetails"
+                          >LESSON ID: {{ lesson.idLesson }}</v-chip
+                        >
+                        <v-chip color="error" x-small v-if="adminDetails"
+                          >MARK ID:
+                          {{
+                            getMarkId(lesson.idLesson, student.studentId)
+                          }}</v-chip
+                        >
+                        <!-- TOTAL DEGREE -->
+                        <template v-if="!hideMarks">
+                          <template
+                            v-if="
+                              getStundetDegree(
+                                student,
+                                lesson.idLesson,
+                                'final'
+                              ) != null ||
+                              getStundetDegree(
+                                student,
+                                lesson.idLesson,
+                                'practicalFinal'
+                              ) != null
+                            "
+                          >
+                            <div
+                              v-if="
+                                getStudentMarkStatus(
+                                  student,
+                                  lesson.idLesson,
+                                  5
+                                ) == 3
+                              "
+                            >
+                              م
+                            </div>
+                            <div v-else>
+                              {{
+                                tafqeetJs(
+                                  getStudentFinalDegree(
+                                    student,
+                                    lesson.idLesson,
+                                    "try1"
+                                  )
+                                )
+                              }}
+                            </div>
+                          </template>
+                        </template>
+                        <!-- TOTAL DEGREE -->
+                      </td>
                     </template>
                   </template>
+                  <td v-if="!student.notice.includes('#')">
+                    <template v-if="getTotalFailsByStudent(student) == 0">
+                      {{ getStudentAvg(student, "try1") }}
+                    </template>
+                  </td>
+                  <td v-if="!student.notice.includes('#')">
+                    <template v-if="getTotalFailsByStudent(student) == 0">
+                      {{ finalResult(getStudentAvg(student, "try1")) }}
+                    </template>
+                  </td>
+                  <td v-if="!student.notice.includes('#')">
+                    {{ getStudentFinalResultText(student, "try1") }}
+                  </td>
+
                   <td
                     :colspan="
                       student.notice.includes('#')
@@ -587,83 +399,7 @@
                 <tr>
                   <td>{{ student.studentCollegeNumber }}</td>
                   <template v-if="!student.notice.includes('#')">
-                    <template
-                      v-for="(lesson, lessonIndex) in mastersheet.lessons"
-                    >
-                      <td
-                        class="center--text"
-                        :key="'STUDENT_LESSONS_5_' + lesson.idLesson"
-                        v-if="checkIfLessonHasFinalDegree(lessonIndex)"
-                        :class="[
-                          getStudentMarkStatus(student, lesson.idLesson, 6) == 2
-                            ? 'red darken-2 white--text'
-                            : '',
-                          getStudentMarkStatus(student, lesson.idLesson, 6) == 3
-                            ? 'yellow darken-2 black--text'
-                            : '',
-                        ]"
-                      >
-                        <!-- SECOND FINAL DEGREE -->
-                        <template v-if="!hideMarks">
-                          <template
-                            v-if="
-                              [1].includes(
-                                getStudentMarkStatus(
-                                  student,
-                                  lesson.idLesson,
-                                  6
-                                )
-                              )
-                            "
-                          >
-                            {{
-                              getStundetDegree(
-                                student,
-                                lesson.idLesson,
-                                "secondFinal"
-                              )
-                            }}
-                          </template>
-                          <template
-                            v-if="
-                              getStudentMarkStatus(
-                                student,
-                                lesson.idLesson,
-                                6
-                              ) == 2
-                            "
-                            >غائب
-                          </template>
-                          <template
-                            v-if="
-                              getStudentMarkStatus(
-                                student,
-                                lesson.idLesson,
-                                6
-                              ) == 3
-                            "
-                            >مؤجل
-                          </template>
-                          <!-- SECOND FINAL DEGREE -->
-                        </template>
-                      </td>
-                      <td
-                        class="center--text"
-                        v-if="checkIfLessonHasPracticalFinalDegree(lessonIndex)"
-                        :key="'STUDENT_LESSONS_6_' + lesson.idLesson"
-                      >
-                        <template v-if="!hideMarks">
-                          <!-- SECOND PRACTICAL FINAL DEGREE -->
-                          {{
-                            getStundetDegree(
-                              student,
-                              lesson.idLesson,
-                              "secondPracticalFinal"
-                            )
-                          }}
-                          <!-- SECOND PRACTICAL FINAL DEGREE -->
-                        </template>
-                      </td>
+                    <template v-for="lesson in mastersheet.lessons">
                       <td
                         class="center--text"
                         v-bind:class="[
@@ -733,6 +469,107 @@
                         </template>
                         <!-- SECOND TOTAL DEGREE -->
                       </td>
+                      <td
+                        class="center--text"
+                        v-bind:class="[
+                          getStundetDegree(
+                            student,
+                            lesson.idLesson,
+                            'secondFinal'
+                          ) != null &&
+                          getStudentFinalDegree(
+                            student,
+                            lesson.idLesson,
+                            'try2'
+                          ) < 50
+                            ? 'red darken-2 white--text'
+                            : '',
+                          checkIfFinalMarkIsCustome(
+                            student,
+                            lesson.idLesson,
+                            12
+                          )
+                            ? getStundetDegree(
+                                student,
+                                lesson.idLesson,
+                                'secondFinal'
+                              ) +
+                                getStundetDegree(
+                                  student,
+                                  lesson.idLesson,
+                                  'secondPracticalFinal'
+                                ) +
+                                getStundetDegree(
+                                  student,
+                                  lesson.idLesson,
+                                  'notFinal'
+                                ) <
+                              50
+                              ? 'yellow darken-2 black--text'
+                              : 'blue darken-2 white--text'
+                            : '',
+                        ]"
+                        :key="'STUDENT_LESSONS_7_' + lesson.idLesson"
+                      >
+                        <!-- SECOND TOTAL DEGREE -->
+                        <template v-if="!hideMarks">
+                          <template
+                            v-if="
+                              getStundetDegree(
+                                student,
+                                lesson.idLesson,
+                                'secondFinal'
+                              ) != null ||
+                              getStundetDegree(
+                                student,
+                                lesson.idLesson,
+                                'secondPracticalFinal'
+                              ) != null
+                            "
+                          >
+                            {{
+                              tafqeetJs(
+                                getStudentFinalDegree(
+                                  student,
+                                  lesson.idLesson,
+                                  "try2"
+                                )
+                              )
+                            }}
+                          </template>
+                        </template>
+                        <!-- SECOND TOTAL DEGREE -->
+                      </td>
+                    </template>
+                    <template
+                      v-if="
+                        !getStudentFinalResultText(student, 'try1').includes(
+                          'ناجح'
+                        )
+                      "
+                    >
+                      <td v-if="!student.notice.includes('#')">
+                        <template
+                          v-if="getTotalFailsByStudent(student, 'try1') > 0"
+                        >
+                          {{ getStudentAvg(student, "try2") }}
+                        </template>
+                      </td>
+                      <td v-if="!student.notice.includes('#')">
+                        <template
+                          v-if="getTotalFailsByStudent(student, 'try1') > 0"
+                        >
+                          {{ finalResult(getStudentAvg(student, "try2")) }}
+                        </template>
+                      </td>
+                      <td v-if="!student.notice.includes('#')">
+                        {{ getStudentFinalResultText(student, "try2") }}
+                      </td>
+                    </template>
+                    <template v-else>
+                      <td v-if="!student.notice.includes('#')"></td>
+                      <td v-if="!student.notice.includes('#')"></td>
+                      <td v-if="!student.notice.includes('#')"></td>
                     </template>
                   </template>
                 </tr>
@@ -758,7 +595,9 @@
 </template>
 
 <script>
-import DocumnetSwitcher from "../../components/DocumnetSwitcher.vue";
+import DocumnetSwitcher from "../../../components/DocumnetSwitcher.vue";
+import * as XLSX from "xlsx/xlsx.mjs";
+
 export default {
   components: {
     DocumnetSwitcher,
@@ -772,7 +611,7 @@ export default {
       { start: 10, end: 20 },
       { start: 20, end: 30 },
     ],
-    studentsPerPage: 13,
+    studentsPerPage: 1000,
     levelType: 1,
   }),
   created: function () {
@@ -783,6 +622,10 @@ export default {
     }
   },
   methods: {
+    tafqeetJs(num) {
+      if (num == 0) return "صفر";
+      return this.$tafqeet.convert(num);
+    },
     fetch() {
       let loading = this.$loading.show();
       this.$http.get("masterSheet/" + this.$route.params.id).then((res) => {
@@ -1025,11 +868,218 @@ export default {
         }
       }
     },
-    getLessonColSpan(lesson) {
-      let colspan = 3;
-      if (this.getLessonMark(lesson, "notFinal") == 0) colspan--;
-      if (this.getLessonMark(lesson, "final") == 0) colspan--;
-      if (this.getLessonMark(lesson, "practicalFinal") == 0) colspan--;
+    getStudentAvg(student, type) {
+      let sum = 0;
+      let totalCredits = this.mastersheet.lessons.reduce(
+        (a, b) => a + b.lessonCredit,
+        0
+      );
+      if (type == "try1") {
+        for (let i = 0; i < this.mastersheet.lessons.length; i++) {
+          const lesson = this.mastersheet.lessons[i];
+          let degree = this.getStudentFinalDegree(
+            student,
+            lesson.idLesson,
+            type
+          );
+          let formula = degree * lesson.lessonCredit;
+          sum = sum + formula;
+        }
+        return (sum / totalCredits).toFixed(3);
+      }
+      if (type == "try2") {
+        for (let i = 0; i < this.mastersheet.lessons.length; i++) {
+          const lesson = this.mastersheet.lessons[i];
+          if (
+            this.getStudentFinalDegree(student, lesson.idLesson, "try1") < 50
+          ) {
+            let degree = this.getStudentFinalDegree(
+              student,
+              lesson.idLesson,
+              type
+            );
+            let formula = degree * lesson.lessonCredit;
+            sum = sum + formula;
+          } else {
+            let degree = this.getStudentFinalDegree(
+              student,
+              lesson.idLesson,
+              "try1"
+            );
+            let formula = degree * lesson.lessonCredit;
+            sum = sum + formula;
+          }
+        }
+        return (sum / totalCredits).toFixed(3);
+      }
+    },
+    finalResult(mark) {
+      if (mark < 50) {
+        return "ضعيف";
+      }
+      if (mark >= 50 && mark < 60) {
+        return "مقبول";
+      }
+      if (mark >= 60 && mark < 70) {
+        return "متوسط";
+      }
+      if (mark >= 70 && mark < 80) {
+        return "جيد";
+      }
+      if (mark >= 80 && mark < 90) {
+        return "جيد جداً";
+      }
+      if (mark >= 90 && mark < 101) {
+        return "امتياز";
+      }
+    },
+    getTotalFailsByStudent(student, type = "try1") {
+      let total = 0;
+      for (let i = 0; i < this.mastersheet.lessons.length; i++) {
+        if (
+          this.getStudentFinalDegree(
+            student,
+            this.mastersheet.lessons[i].idLesson,
+            type
+          ) < 50
+        ) {
+          if (type == "try1") {
+            total += 1;
+          } else {
+            var mark = this.getStudentFinalDegree(
+              student,
+              this.mastersheet.lessons[i].idLesson,
+              "try1"
+            );
+            if (mark < 50) {
+              total += 1;
+            }
+          }
+        }
+      }
+      return total;
+    },
+    checkIfStudentHasCustomMark(student, type = "try1") {
+      let lessons = 0;
+      for (let i = 0; i < this.mastersheet.lessons.length; i++) {
+        if (type == "try1") {
+          if (
+            this.checkIfFinalMarkIsCustome(
+              student,
+              this.mastersheet.lessons[i].idLesson,
+              11
+            )
+          ) {
+            if (
+              this.getStudentFinalDegree(
+                student,
+                this.mastersheet.lessons[i].idLesson,
+                "try1"
+              ) >
+              this.getStundetDegree(
+                student,
+                this.mastersheet.lessons[i].idLesson,
+                "final"
+              ) +
+                this.getStundetDegree(
+                  student,
+                  this.mastersheet.lessons[i].idLesson,
+                  "practicalFinal"
+                ) +
+                this.getStundetDegree(
+                  student,
+                  this.mastersheet.lessons[i].idLesson,
+                  "notFinal"
+                )
+            ) {
+              lessons++;
+            }
+          }
+        } else {
+          if (
+            this.checkIfFinalMarkIsCustome(
+              student,
+              this.mastersheet.lessons[i].idLesson,
+              12
+            )
+          ) {
+            if (
+              this.getStudentFinalDegree(
+                student,
+                this.mastersheet.lessons[i].idLesson,
+                "try2"
+              ) >
+              this.getStundetDegree(
+                student,
+                this.mastersheet.lessons[i].idLesson,
+                "secondFinal"
+              ) +
+                this.getStundetDegree(
+                  student,
+                  this.mastersheet.lessons[i].idLesson,
+                  "secondPracticalFinal"
+                ) +
+                this.getStundetDegree(
+                  student,
+                  this.mastersheet.lessons[i].idLesson,
+                  "notFinal"
+                )
+            ) {
+              lessons++;
+            }
+          }
+        }
+      }
+      return lessons;
+    },
+
+    getStudentFinalResultText(student, type) {
+      if (type == "try1") {
+        if (
+          this.getTotalFailsByStudent(student) > 0 &&
+          this.checkIfStudentHasCustomMark(student) > 0
+        )
+          return "مكمل بقرار";
+        if (
+          this.getTotalFailsByStudent(student) > 0 &&
+          this.checkIfStudentHasCustomMark(student) == 0
+        )
+          return "مكمل";
+        if (
+          this.getTotalFailsByStudent(student) == 0 &&
+          this.checkIfStudentHasCustomMark(student) == 0
+        )
+          return "ناجح";
+        if (
+          this.getTotalFailsByStudent(student) == 0 &&
+          this.checkIfStudentHasCustomMark(student) > 0
+        )
+          return "ناجح بقرار";
+      }
+      if (type == "try2") {
+        if (
+          this.getTotalFailsByStudent(student, "try2") <= 2 &&
+          this.getTotalFailsByStudent(student, "try2") > 0
+        )
+          return "عبور";
+        if (this.getTotalFailsByStudent(student, "try2") > 2) return "راسب";
+        if (
+          this.getTotalFailsByStudent(student, "try2") == 0 &&
+          this.checkIfStudentHasCustomMark(student, "try2") == 0
+        )
+          return "ناجح";
+        if (
+          this.getTotalFailsByStudent(student, "try2") == 0 &&
+          this.checkIfStudentHasCustomMark(student, "try2") > 0
+        )
+          return "ناجح بقرار";
+      }
+    },
+    getLessonColSpan() {
+      let colspan = 2;
+      // if (this.getLessonMark(lesson, "notFinal") == 0) colspan--;
+      // if (this.getLessonMark(lesson, "final") == 0) colspan--;
+      // if (this.getLessonMark(lesson, "practicalFinal") == 0) colspan--;
       return colspan;
     },
     getAllLessonColSpan() {
@@ -1120,6 +1170,22 @@ export default {
             });
           }
         });
+    },
+
+    tablesToExcel() {
+      var table_elt = document.getElementsByClassName(
+        "v-data-table__wrapper"
+      )[0];
+      var wb = XLSX.utils.table_to_book(table_elt, { raw: true });
+      if (wb.Workbook) {
+        wb.Workbook.Views[0]["RTL"] = true;
+      } else {
+        wb.Workbook = {};
+        wb.Workbook["Views"] = [{ RTL: true }];
+      }
+
+      // Package and Release Data (`writeFile` tries to write and save an XLSB file)
+      XLSX.writeFile(wb, "Report.xlsx");
     },
   },
 };

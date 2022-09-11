@@ -4,17 +4,11 @@
       <v-toolbar-title>
         <DocumnetSwitcher
           v-if="mastersheet != null"
-          type="finalMarks"
+          type="notFinalMarks"
           :id="mastersheet.idMasterSheet"
         />
       </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn
-        @click="merge()"
-        color="success"
-        v-if="mastersheet.masterSheetStudyTypeId != 1"
-        >دمج</v-btn
-      >
       <v-btn icon @click="print()">
         <v-icon>la-print</v-icon>
       </v-btn>
@@ -40,9 +34,8 @@
               <h5>كلية دجلة الجامعة</h5>
               <h5>قسم {{ mastersheet.sectionName }}</h5>
               <h6>
-                نتائج الامتحان النهائي للعام الدراسي {{ mastersheet.yearName }}
+                نتائج السعي السنوي للعام الدراسي {{ mastersheet.yearName }}
               </h6>
-              <h5>الدور الاول</h5>
             </center>
           </v-col>
           <v-col style="text-align: left; font-size: 11px">
@@ -75,19 +68,6 @@
               <v-col>
                 <span>الطالب: {{ student.studentName }}</span>
               </v-col>
-              <v-col style="text-align: left">
-                <span v-if="mastersheet.masterSheetTypeId == 1"
-                  >النتيجة:
-                  {{
-                    getTotalFailsByStudent(student) == 0 ? "ناجح" : "مكمل"
-                  }}</span
-                >
-                <span v-if="mastersheet.masterSheetTypeId == 1">
-                  <span v-if="checkIfStudentHasCustomMark(student) > 0">
-                    بقرار</span
-                  >
-                </span>
-              </v-col>
             </v-row>
           </v-col>
         </v-row>
@@ -112,17 +92,14 @@
           >
           <tbody v-if="student.marks != null">
             <tr>
-              <td class="grey lighten-2">التقدير</td>
+              <td class="grey lighten-2">السعي</td>
               <td
                 v-for="lesson in mastersheet.lessons"
                 :key="lesson.idLesson"
                 v-bind:class="[
-                  finalResult(
-                    getStudentFinalDegree(student, lesson.idLesson, 'try1')
-                  ) == 'ضعيف' &&
-                  student.marks.filter((e) => e.lessonId == lesson.idLesson)
-                    .length > 0
-                    ? 'red darken-2 white--text'
+                  getStundetDegree(student, lesson.idLesson, 'notFinal') <
+                  getLessonMark(lesson, 'notFinal') / 2
+                    ? 'error white--text'
                     : '',
                 ]"
               >
@@ -132,41 +109,29 @@
                       .length > 0
                   "
                 >
-                  {{
-                    finalResult(
-                      getStudentFinalDegree(student, lesson.idLesson, "try1")
-                    )
-                  }}
-                  <span
-                    v-if="
-                      checkIfStudentHasCustomMarkPerLesson(
-                        student,
-                        lesson.idLesson
-                      ) &&
-                      getStundetDegree(student, lesson.idLesson, 'final') +
-                        getStundetDegree(
-                          student,
-                          lesson.idLesson,
-                          'practicalFinal'
-                        ) +
-                        getStundetDegree(student, lesson.idLesson, 'notFinal') <
-                        50
-                    "
-                  >
-                    بقرار</span
-                  >
+                  {{ getStundetDegree(student, lesson.idLesson, "notFinal") }}
                 </div>
               </td>
             </tr>
           </tbody>
+          <tfoot>
+            <tr>
+              <th class="grey lighten-1">الدرجة القصوى</th>
+              <template v-for="lesson in mastersheet.lessons">
+                <th class="" :key="lesson.idLesson">
+                  {{ getLessonMark(lesson, "notFinal") }}
+                </th>
+              </template>
+            </tr>
+          </tfoot>
         </v-simple-table>
         <br />
         <v-row>
           <v-col>
-            <span> ختم اللجنة الامتحانية</span>
+            <!-- <span> ختم اللجنة الامتحانية</span> -->
           </v-col>
           <v-col style="text-align: left">
-            <span>رئيس القسم </span>
+            <!-- <span>رئيس القسم </span> -->
           </v-col>
         </v-row>
       </v-sheet>
@@ -344,45 +309,8 @@ export default {
         return true;
       }
     },
-    checkIfStudentHasCustomMark(student) {
-      let lessons = 0;
-      for (let i = 0; i < this.mastersheet.lessons.length; i++) {
-        if (
-          this.checkIfFinalMarkIsCustome(
-            student,
-            this.mastersheet.lessons[i].idLesson,
-            11
-          )
-        ) {
-          lessons++;
-        }
-      }
-      return lessons;
-    },
-    checkIfStudentHasCustomMarkPerLesson(student, lessonId) {
-      if (this.checkIfFinalMarkIsCustome(student, lessonId, 11)) {
-        return true;
-      } else {
-        return false;
-      }
-    },
     getStudentFinalDegree(student, lessonId, type) {
-      if (student.marks == null) {
-        return;
-      }
-
       if (type == "try1") {
-        if (
-          this.mastersheet.studyYearId != 2 &&
-          this.mastersheet.studyYearId != 1
-        ) {
-          if (
-            [2].includes(this.getStudentMarkStatus(student, lessonId, 5)) ||
-            [2].includes(this.getStudentMarkStatus(student, lessonId, 7))
-          ) {
-            return 0;
-          }
-        }
         if ([1, 4].includes(this.getStudentMarkStatus(student, lessonId, 5))) {
           let customfinalMark = student.marks.filter(
             (mark) =>
@@ -495,63 +423,6 @@ export default {
         }
       }
       return total;
-    },
-    merge() {
-      // let loading = this.$loading.show();
-      this.$http
-        .get(
-          `mastersheets?sectionId=${this.mastersheet.sectionId}&year=${this.mastersheet.studyYearId}&class=${this.mastersheet.studyClass}&masterSheetTypeId=${this.mastersheet.masterSheetTypeId}&level=${this.mastersheet.studyLevel}`
-        )
-        .then((res) => {
-          let id = res.data.filter((e) => e.masterSheetStudyTypeId == 1)[0]
-            .idMasterSheet;
-          if (id == undefined || id == null) {
-            this.$toast.open({
-              type: "error",
-              message: "لا يوجد ماستر فصل اول",
-              duration: 5000,
-              position: "bottom",
-            });
-          } else {
-            this.$http.get("mastersheet/" + id).then((res) => {
-              if (
-                res.data.students.length != this.mastersheet.students.length
-              ) {
-                this.$toast.open({
-                  type: "error",
-                  message:
-                    "عدد طلاب الفصل الاول غير مساو لعدد طلاب الفصل الثاني",
-                  duration: 5000,
-                  position: "bottom",
-                });
-                return;
-              }
-
-              res.data.lessons = res.data.lessons.sort(
-                (a, b) => a.lessonCredit - b.lessonCredit
-              );
-
-              this.mastersheet.lessons = [
-                ...res.data.lessons,
-                ...this.mastersheet.lessons,
-              ];
-              for (let i = 0; i < this.mastersheet.students.length; i++) {
-                if (this.mastersheet.students[i].marks != null) {
-                  let student = this.mastersheet.students[i];
-                  let secondStudentMarks = res.data.students.filter(
-                    (e) => e.studentId == student.studentId
-                  )[0].marks;
-                  if (secondStudentMarks != null) {
-                    this.mastersheet.students[i].marks = [
-                      ...this.mastersheet.students[i].marks,
-                      ...secondStudentMarks,
-                    ];
-                  }
-                }
-              }
-            });
-          }
-        });
     },
   },
 };

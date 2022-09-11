@@ -17,8 +17,11 @@ export default {
   data: () => ({
     items: [
       { title: "ماستر شيت", value: "mastersheet" },
+      { title: "ميني شيت", value: "minisheet" },
       { title: "النتائج دور اول", value: "finalMarks" },
+      { title: "النتائج دور ثاني", value: "finalMarksSecondTry" },
       { title: "التقارير دور اول", value: "reports" },
+      { title: "السعي", value: "notFinalMarks" },
     ],
   }),
 };

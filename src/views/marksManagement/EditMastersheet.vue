@@ -30,6 +30,9 @@
       <v-btn @click="addStudentsModal = true" color="success">
         <span>اضافة طلاب</span>
       </v-btn>
+      <v-btn @click="fetchDiscount()" color="primary">
+        <span>تخفيض</span>
+      </v-btn>
     </v-app-bar>
 
     <v-card>
@@ -90,6 +93,12 @@
                   >فاينل عملي دور ثاني</v-badge
                 >
               </th>
+              <th width="50" v-if="!checkField(11)">
+                <v-badge inline :content="100">قرار د1</v-badge>
+              </th>
+              <th width="50" v-if="!checkField(12)">
+                <v-badge inline :content="100">قرار د2 او تخفيض</v-badge>
+              </th>
               <th width="100px">الاجراءات</th>
             </tr>
           </thead>
@@ -115,12 +124,7 @@
                 </v-chip>
               </td>
               <td>
-                <span v-if="getMark(student, 1).markStatusId != 1">
-                  {{ getMarkStatus(getMark(student, 1).markStatusId) }}
-                </span>
-                <span v-else>
-                  {{ getStundetDegree(student, selectedLesson, "notFinal") }}
-                </span>
+                {{ getStundetDegree(student, selectedLesson, "notFinal") }}
               </td>
               <!--   <td data-marktype="marktype" v-if="!checkField(1)">
                 <v-text-field
@@ -404,33 +408,152 @@
                 ></v-text-field>
               </td>
               <td v-if="!checkField(7)">
-                <v-text-field
-                  tabindex="8"
-                  outlined
-                  dense
-                  hide-details
-                  @contextmenu="
-                    showDegreeMenuFunc($event, student.studentId, 8)
-                  "
-                  type="text"
-                  ref="j"
-                  :rules="[rules.number]"
-                  @keyup="focusing(index, $event, 'j')"
-                  :prefix="getMarkStatus(getMark(student, 8).markStatusId)"
-                  :max="getLessonMaximumDegree(8)"
-                  :min="0"
-                  @change="updateDegree($event, student.studentId, 8)"
-                  :class="{
-                    'error white--text': getMark(student, 8).markStatusId == 2,
-                    'warning black--text':
-                      getMark(student, 8).markStatusId == 3,
-                  }"
-                  :value="
-                    getMark(student, 8).markStatusId == 1
-                      ? getMark(student, 8).degree
-                      : null
-                  "
-                ></v-text-field>
+                <v-row>
+                  <v-col>
+                    <v-text-field
+                      tabindex="8"
+                      outlined
+                      dense
+                      hide-details
+                      @contextmenu="
+                        showDegreeMenuFunc($event, student.studentId, 8)
+                      "
+                      type="text"
+                      ref="j"
+                      :rules="[rules.number]"
+                      @keyup="focusing(index, $event, 'j')"
+                      :prefix="getMarkStatus(getMark(student, 8).markStatusId)"
+                      :max="getLessonMaximumDegree(8)"
+                      :min="0"
+                      @change="updateDegree($event, student.studentId, 8)"
+                      :class="{
+                        'error white--text':
+                          getMark(student, 8).markStatusId == 2,
+                        'warning black--text':
+                          getMark(student, 8).markStatusId == 3,
+                      }"
+                      :value="
+                        getMark(student, 8).markStatusId == 1
+                          ? getMark(student, 8).degree
+                          : null
+                      "
+                    ></v-text-field>
+                  </v-col>
+                  <v-col v-if="getMark(student, 8).degree == 0">
+                    <v-btn
+                      @click="
+                        deleteMark(
+                          getMark(student, 8).idMasterSheetMarks,
+                          student,
+                          selectedLesson,
+                          8
+                        )
+                      "
+                      color="error"
+                    >
+                      <span>حذف الدرجة</span>
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </td>
+
+              <td v-if="!checkField(11)">
+                <v-row>
+                  <v-col>
+                    <v-text-field
+                      tabindex="11"
+                      outlined
+                      dense
+                      hide-details
+                      @contextmenu="
+                        showDegreeMenuFunc($event, student.studentId, 11)
+                      "
+                      type="text"
+                      ref="k"
+                      :rules="[rules.number]"
+                      @keyup="focusing(index, $event, 'k')"
+                      :prefix="getMarkStatus(getMark(student, 11).markStatusId)"
+                      :max="getLessonMaximumDegree(11)"
+                      :min="0"
+                      @change="updateDegree($event, student.studentId, 11)"
+                      :class="{
+                        'error white--text':
+                          getMark(student, 11).markStatusId == 2,
+                        'warning black--text':
+                          getMark(student, 11).markStatusId == 3,
+                      }"
+                      :value="
+                        getMark(student, 11).markStatusId == 1
+                          ? getMark(student, 11).degree
+                          : null
+                      "
+                    ></v-text-field>
+                  </v-col>
+                  <v-col v-if="getMark(student, 11).degree == 0">
+                    <v-btn
+                      @click="
+                        deleteMark(
+                          getMark(student, 11).idMasterSheetMarks,
+                          student,
+                          selectedLesson,
+                          11
+                        )
+                      "
+                      color="error"
+                    >
+                      <span>حذف الدرجة</span>
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </td>
+              <td v-if="!checkField(12)">
+                <v-row>
+                  <v-col>
+                    <v-text-field
+                      tabindex="12"
+                      outlined
+                      dense
+                      hide-details
+                      @contextmenu="
+                        showDegreeMenuFunc($event, student.studentId, 12)
+                      "
+                      type="text"
+                      ref="k"
+                      :rules="[rules.number]"
+                      @keyup="focusing(index, $event, 'k')"
+                      :prefix="getMarkStatus(getMark(student, 12).markStatusId)"
+                      :max="getLessonMaximumDegree(12)"
+                      :min="0"
+                      @change="updateDegree($event, student.studentId, 12)"
+                      :class="{
+                        'error white--text':
+                          getMark(student, 12).markStatusId == 2,
+                        'warning black--text':
+                          getMark(student, 12).markStatusId == 3,
+                      }"
+                      :value="
+                        getMark(student, 12).markStatusId == 1
+                          ? getMark(student, 12).degree
+                          : null
+                      "
+                    ></v-text-field>
+                  </v-col>
+                  <v-col v-if="getMark(student, 12).degree == 0">
+                    <v-btn
+                      @click="
+                        deleteMark(
+                          getMark(student, 12).idMasterSheetMarks,
+                          student,
+                          selectedLesson,
+                          12
+                        )
+                      "
+                      color="error"
+                    >
+                      <span>حذف الدرجة</span>
+                    </v-btn>
+                  </v-col>
+                </v-row>
               </td>
               <td>
                 <v-tooltip
@@ -801,6 +924,9 @@ export default {
       }
     },
     checkField(markType) {
+      if (markType == 11 || markType == 12) {
+        return false;
+      }
       let lesson = this.mastersheet.lessons.filter(
         (lesson) => lesson.idLesson == this.selectedLesson
       );
@@ -895,9 +1021,14 @@ export default {
           (e) => e.studentId == studentId
         )[0];
         if (this.getMark(student, 1).markStatusId == 1) {
-          let maximumDegree = lessonInfo[0].marks.filter(
-            (x) => x.markTypeId == checkType
-          )[0].maximumDegree;
+          let maximumDegree = 0;
+          if (markType == 11 || markType == 12) {
+            maximumDegree = 100;
+          } else {
+            maximumDegree = lessonInfo[0].marks.filter(
+              (x) => x.markTypeId == checkType
+            )[0].maximumDegree;
+          }
           if (e > maximumDegree) {
             this.$toast.open({
               type: "error",
@@ -1174,6 +1305,164 @@ export default {
     },
     setQuery() {
       this.$router.push({ query: { lesson: this.selectedLesson } });
+    },
+    fetchDiscount() {
+      let loading = this.$loading.show();
+      for (let i = 0; i < this.mastersheet.students.length; i++) {
+        let student = this.mastersheet.students[i];
+        let lessonMarkTry1 = this.getStudentFinalDegree(
+          student,
+          this.selectedLesson,
+          "try1"
+        );
+        let lessonMarkTry2 = this.getStudentFinalDegree(
+          student,
+          this.selectedLesson,
+          "try2"
+        );
+        if (lessonMarkTry1 < 50 && lessonMarkTry2 > 50) {
+          // ? CAN DISCOUNT
+          let mark = 0;
+          // * CHECK IF HE IS ALREADY HAVE DISCOUNT
+          if (
+            !this.checkIfFinalMarkIsCustome(student, this.selectedLesson, 12)
+          ) {
+            if (lessonMarkTry2 <= 60 && lessonMarkTry2 > 49) {
+              mark = 50;
+            } else {
+              mark = lessonMarkTry2 - 10;
+            }
+            this.updateDegree(mark, student.studentId, 12);
+          } else {
+            // ! CAN'T DISCOUNT
+          }
+        }
+      }
+      this.$toast.open({
+        type: "warning",
+        message: "تم تخفيض الطلاب",
+        duration: 3000,
+      });
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
+      loading.hide();
+    },
+    checkIfFinalMarkIsCustome(student, lessonId, type) {
+      if (this.hideMarks) {
+        return false;
+      }
+      let marks = student.marks;
+      if (marks == null) {
+        return false;
+      }
+      let customMark = marks.filter(
+        (mark) =>
+          mark.masterSheetMarkTypeId == type && mark.lessonId == lessonId
+      );
+      if (customMark.length > 0) {
+        return true;
+      }
+    },
+    getTotalFailsByStudent(student, type = "try1") {
+      let total = 0;
+      for (let i = 0; i < this.mastersheet.lessons.length; i++) {
+        if (
+          this.getStudentFinalDegree(
+            student,
+            this.mastersheet.lessons[i].idLesson,
+            type
+          ) < 50
+        ) {
+          if (type == "try1") {
+            total += 1;
+          } else {
+            var mark = this.getStudentFinalDegree(
+              student,
+              this.mastersheet.lessons[i].idLesson,
+              "try1"
+            );
+            if (mark < 50) {
+              total += 1;
+            }
+          }
+        }
+      }
+      return total;
+    },
+    getStudentFinalDegree(student, lessonId, type) {
+      if (student.marks == null) {
+        return;
+      }
+
+      if (type == "try1") {
+        if (
+          this.mastersheet.studyYearId != 2 &&
+          this.mastersheet.studyYearId != 1
+        ) {
+          if (
+            [2].includes(this.getStudentMarkStatus(student, lessonId, 5)) ||
+            [2].includes(this.getStudentMarkStatus(student, lessonId, 7))
+          ) {
+            return 0;
+          }
+        }
+        if ([1, 4].includes(this.getStudentMarkStatus(student, lessonId, 5))) {
+          let customfinalMark = student.marks.filter(
+            (mark) =>
+              mark.masterSheetMarkTypeId == 11 && mark.lessonId == lessonId
+          );
+          if (customfinalMark.length > 0) {
+            return customfinalMark[0].degree;
+          }
+          return (
+            this.getStundetDegree(student, lessonId, "notFinal") +
+            this.getStundetDegree(student, lessonId, "practicalFinal") +
+            this.getStundetDegree(student, lessonId, "final")
+          );
+        } else {
+          return 0;
+        }
+      }
+      if (type == "try2") {
+        if ([1, 4].includes(this.getStudentMarkStatus(student, lessonId, 6))) {
+          let customfinalMark = student.marks.filter(
+            (mark) =>
+              mark.masterSheetMarkTypeId == 12 && mark.lessonId == lessonId
+          );
+          if (customfinalMark.length > 0) {
+            return customfinalMark[0].degree;
+          }
+          return (
+            this.getStundetDegree(student, lessonId, "notFinal") +
+            this.getStundetDegree(student, lessonId, "secondFinal") +
+            this.getStundetDegree(student, lessonId, "secondPracticalFinal")
+          );
+        } else {
+          return 0;
+        }
+      }
+    },
+    getStudentMarkStatus(student, lessonId, markTypeId) {
+      let marks = student.marks;
+      if (marks == null) {
+        return 0;
+      }
+      let markStatus = marks.filter(
+        (mark) =>
+          mark.lessonId == lessonId && mark.masterSheetMarkTypeId == markTypeId
+      );
+      if (markStatus.length > 0) {
+        if (this.hideMarks && markStatus[0].markStatusId == 4) {
+          return 4;
+        }
+        if (this.hideMarks && markStatus[0].markStatusId != 4) {
+          return 1;
+        }
+        return markStatus[0].markStatusId;
+      } else {
+        return 1;
+      }
     },
   },
   computed: {

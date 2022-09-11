@@ -42,6 +42,24 @@ const routes = [
       import("../views/marksManagement/mastersheet/FinalMarks.vue"),
   },
   {
+    path: "/finalMarksSecondTry/:id",
+    name: "EditMastersheets",
+    component: () =>
+      import("../views/marksManagement/mastersheet/FinalMarksSecondTry.vue"),
+  },
+  {
+    path: "/minisheet/:id",
+    name: "Minisheet",
+    component: () =>
+      import("../views/marksManagement/mastersheet/Minisheet.vue"),
+  },
+  {
+    path: "/notFinalMarks/:id",
+    name: "notFinalMarks",
+    component: () =>
+      import("../views/marksManagement/mastersheet/NotFinalMarks.vue"),
+  },
+  {
     path: "/reports/:id",
     name: "EditMastersheets",
     component: () => import("../views/marksManagement/mastersheet/Report.vue"),
