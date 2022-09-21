@@ -64,6 +64,29 @@ const routes = [
     name: "EditMastersheets",
     component: () => import("../views/marksManagement/mastersheet/Report.vue"),
   },
+  {
+    path: "/ordering/:id",
+    name: "EditMastersheets",
+    component: () =>
+      import("../views/marksManagement/mastersheet/Ordering.vue"),
+  },
+  {
+    path: "/orderingSecondTry/:id",
+    name: "EditMastersheets",
+    component: () =>
+      import("../views/marksManagement/mastersheet/OrderingSecondTry.vue"),
+  },
+  {
+    path: "/reportsSecondTry/:id",
+    name: "EditMastersheets",
+    component: () =>
+      import("../views/marksManagement/mastersheet/ReportSecondTry.vue"),
+  },
+  {
+    path: "/chat",
+    name: "GroupChat",
+    component: () => import("../views/chat/groupChat.vue"),
+  },
 ];
 
 const router = new VueRouter({

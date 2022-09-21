@@ -21,6 +21,8 @@ export default {
       { title: "النتائج دور اول", value: "finalMarks" },
       { title: "النتائج دور ثاني", value: "finalMarksSecondTry" },
       { title: "التقارير دور اول", value: "reports" },
+      { title: "التقارير دور ثاني", value: "reportsSecondTry" },
+      { title: "تسلسل الطلاب ", value: "ordering" },
       { title: "السعي", value: "notFinalMarks" },
     ],
   }),

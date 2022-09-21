@@ -13,6 +13,9 @@ import "vue-toast-notification/dist/theme-sugar.css";
 import Print from "vue-printjs";
 import FloatingVue from "floating-vue";
 import Tafqeet from "vue-tafqeet";
+import VueChatScroll from "vue-chat-scroll";
+import VueSocketIO from "vue-socket.io";
+import { io } from "socket.io-client";
 
 var token = localStorage.getItem("token");
 
@@ -40,6 +43,27 @@ Vue.use(VueToast, {
 });
 Vue.use(FloatingVue);
 Vue.use(Tafqeet);
+Vue.use(VueChatScroll);
+
+const chat = io("http://localhost:5099", {
+  transports: ["websocket", "polling", "flashsocket"],
+  useConnectionNamespace: true,
+  autoConnect: false,
+});
+Vue.use(
+  new VueSocketIO({
+    debug: true,
+    connection: {
+      chat,
+    },
+    vuex: {
+      store,
+      actionPrefix: "SOCKET_",
+      mutationPrefix: "SOCKET_",
+    },
+    allowEIO3: true,
+  }),
+);
 new Vue({
   router,
   store,

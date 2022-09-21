@@ -123,6 +123,11 @@ export default {
         icon: "la-award",
         route: "/mastersheets",
       },
+      // {
+      //   title: "المحادثات",
+      //   icon: "la-comments",
+      //   route: "/chat",
+      // },
     ],
   }),
   methods: {
