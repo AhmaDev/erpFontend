@@ -28,12 +28,7 @@
       <v-btn plain @click="hideMarks = false" v-if="hideMarks">
         اظهار الدرجات
       </v-btn> -->
-      <v-btn
-        @click="merge()"
-        color="success"
-        v-if="mastersheet.masterSheetStudyTypeId != 1"
-        >دمج</v-btn
-      >
+
       <v-btn icon @click="tablesToExcel()">
         <v-icon>la-download</v-icon>
       </v-btn>
@@ -59,7 +54,16 @@
             <v-simple-table>
               <thead>
                 <tr>
-                  <td colspan="4">تسلسل معدلات</td>
+                  <td colspan="4">
+                    تسلسل معدلات
+                    <span v-if="levelType == 2">
+                      {{
+                        mastersheet.masterSheetStudyTypeId == 1
+                          ? "الفصل الاول"
+                          : "الفصل الثاني"
+                      }}
+                    </span>
+                  </td>
                 </tr>
                 <tr>
                   <th>التسلسل</th>

@@ -68,9 +68,42 @@ export default {
     messages: [],
     isConnected: false,
   }),
+  created: function () {
+    setTimeout(() => {
+      this.connect();
+      setTimeout(() => {
+        this.fetch();
+      }, 1000);
+    }, 1000);
+  },
   methods: {
+    generateRoomName() {
+      return `ROOM_${this.room.sectionId}_${this.room.level}_${this.room.class}`;
+    },
+    fetch() {
+      this.$axios
+        .get(this.$store.state.chatApi + "messages/" + this.generateRoomName())
+        .then((res) => {
+          for (let i = 0; i < res.data.length; i++) {
+            const message = res.data[i];
+            this.messages.push({
+              text: message.messageContent,
+              username: message.userName,
+              isLoading: false,
+              isMe: message.createdBy == this.userInfo.idUser,
+              isAdmin: message.createdBy == this.userInfo.idUser,
+            });
+          }
+          this.scrollToBottom();
+        });
+    },
     connect() {
-      this.$socket.chat.io.opts.query = { sectionId: 31, level: 1, class: "A" };
+      this.room.sectionId = this.userInfo.sectionId;
+      this.$socket.chat.io.opts.query = {
+        sectionId: this.userInfo.sectionId,
+        level: this.room.level,
+        class: this.room.class,
+      };
       this.$socket.chat.connect();
       this.isConnected = this.$socket.chat.connected;
     },
@@ -87,13 +120,13 @@ export default {
       let message = {
         text: this.messageField,
         username: this.userInfo.userName,
-        isLoading: true,
+        isLoading: false,
         isMe: true,
         isAdmin: 1,
       };
       this.messages.push(message);
       this.$socket.chat.emit("send", {
-        sectionId: 31,
+        sectionId: this.userInfo.sectionId,
         level: 1,
         class: "A",
         userInfo: this.userInfo,

@@ -70,13 +70,16 @@
                     : "المسائية"
                 }}
               </div>
-              <div v-if="levelType == 2">
-                {{
-                  mastersheet.masterSheetStudyTypeId == 1
-                    ? "الفصل الاول"
-                    : "الفصل الثاني"
-                }}
+              <div v-if="!isMerged">
+                <div v-if="levelType == 2">
+                  {{
+                    mastersheet.masterSheetStudyTypeId == 1
+                      ? "الفصل الاول"
+                      : "الفصل الثاني"
+                  }}
+                </div>
               </div>
+              <div v-if="isMerged">الفصل الاول والثاني</div>
             </v-col>
             <v-col cols="12">
               <v-row>
@@ -197,6 +200,7 @@ export default {
   components: { DocumnetSwitcher },
   data: () => ({
     mastersheet: null,
+    isMerged: false,
     pages: [
       { start: 0, end: 10 },
       { start: 10, end: 20 },
@@ -623,6 +627,7 @@ export default {
                   }
                 }
               }
+              this.isMerged = true;
             });
           }
         });

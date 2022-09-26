@@ -606,6 +606,7 @@ export default {
     mastersheet: null,
     adminDetails: false,
     hideMarks: false,
+    isMerged: false,
     pages: [
       { start: 0, end: 10 },
       { start: 10, end: 20 },
@@ -1115,6 +1116,9 @@ export default {
       return markId;
     },
     merge() {
+      if (this.isMerged) {
+        return;
+      }
       // let loading = this.$loading.show();
       this.$http
         .get(
@@ -1167,6 +1171,7 @@ export default {
                   }
                 }
               }
+              this.isMerged = true;
             });
           }
         });

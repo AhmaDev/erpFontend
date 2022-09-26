@@ -859,6 +859,7 @@ export default {
     ],
     studentsPerPage: 13,
     levelType: 1,
+    isMerged: false,
   }),
   created: function () {
     this.fetch();
@@ -1161,6 +1162,9 @@ export default {
       return markId;
     },
     merge() {
+      if (this.isMerged) {
+        return;
+      }
       // let loading = this.$loading.show();
       this.$http
         .get(
@@ -1213,6 +1217,7 @@ export default {
                   }
                 }
               }
+              this.isMerged = true;
             });
           }
         });
