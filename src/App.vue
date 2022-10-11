@@ -123,6 +123,11 @@ export default {
         icon: "la-award",
         route: "/mastersheets",
       },
+      {
+        title: "الجدول الدراسي",
+        icon: "la-calendar-day",
+        route: "/schedules",
+      },
       // {
       //   title: "المحادثات",
       //   icon: "la-comments",

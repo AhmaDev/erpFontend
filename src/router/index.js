@@ -87,6 +87,11 @@ const routes = [
     name: "GroupChat",
     component: () => import("../views/chat/groupChat.vue"),
   },
+  {
+    path: "/schedules",
+    name: "Schedules",
+    component: () => import("../views/schedule/Schedules.vue"),
+  },
 ];
 
 const router = new VueRouter({

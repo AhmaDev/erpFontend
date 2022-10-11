@@ -182,6 +182,41 @@
                     v-model="lessonForm.lessonCredit"
                   ></v-text-field>
                 </v-col>
+                <v-col cols="3">
+                  <v-text-field
+                    dense
+                    type="number"
+                    outlined
+                    label="ساعات النظري"
+                    v-model="lessonForm.thHours"
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="3">
+                  <v-text-field
+                    dense
+                    type="number"
+                    outlined
+                    label="ساعات العملي"
+                    v-model="lessonForm.prHours"
+                  ></v-text-field>
+                </v-col>
+                <v-col>
+                  <v-autocomplete
+                    outlined
+                    dense
+                    item-value="idTeacher"
+                    item-text="teacherName"
+                    v-model="lessonForm.teacherId"
+                    label="التدريسي"
+                    :items="teachers"
+                  ></v-autocomplete>
+                </v-col>
+                <v-col>
+                  <v-btn @click="addTeacherDialog = true" color="primary">
+                    <v-icon>la-plus</v-icon>
+                    اضافة تدريسي
+                  </v-btn>
+                </v-col>
               </v-row>
               <v-data-table
                 :items="
@@ -315,6 +350,16 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="addTeacherDialog" :width="500">
+      <v-card class="pa-10">
+        <v-text-field
+          v-model="addTeacherForm.teacherName"
+          outlined
+          label="اسم التدريسي"
+        ></v-text-field>
+        <v-btn @click="addTeacher()" block color="primary">اضافة</v-btn>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -328,6 +373,10 @@ export default {
     selectedYear: 0,
     selectedLevel: 0,
     levelTypes: [],
+    teachers: [],
+    addTeacherForm: {
+      teacherName: "",
+    },
     saveLessonLoading: false,
     addNewLessonDialog: false,
     addNewLessonForm: {},
@@ -341,7 +390,11 @@ export default {
       lessonName: null,
       secondLessonName: null,
       lessonCredit: 0,
+      teacherId: 0,
+      thHours: 0,
+      prHours: 0,
     },
+    addTeacherDialog: false,
   }),
   created: function () {
     this.fetch();
@@ -372,6 +425,7 @@ export default {
       this.$http.get(`markTypes`).then((res) => {
         this.markTypes = res.data;
       });
+      this.getTeachers();
     },
     selectYear(id) {
       this.selectedYear = id;
@@ -409,6 +463,9 @@ export default {
         lessonName: lesson.lessonName,
         secondLessonName: lesson.secondLessonName,
         lessonCredit: lesson.lessonCredit,
+        thHours: lesson.thHours,
+        prHours: lesson.prHours,
+        teacherId: lesson.teacherId,
       };
     },
     setLevelType(e) {
@@ -469,7 +526,7 @@ export default {
       this.addNewLessonForm = {
         lessonName: null,
         secondLessonName: null,
-        teacherId: 1,
+        teacherId: 0,
         lessonLevel: this.selectedLevel + 1,
         sectionId: this.userInfo.sectionId,
         lessonCredit: 0,
@@ -556,6 +613,9 @@ export default {
           lessonName: this.lessonForm.lessonName,
           secondLessonName: this.lessonForm.secondLessonName,
           lessonCredit: this.lessonForm.lessonCredit,
+          thHours: this.lessonForm.thHours,
+          prHours: this.lessonForm.prHours,
+          teacherId: this.lessonForm.teacherId,
         })
         .then(() => {
           this.$toast.open({
@@ -563,6 +623,7 @@ export default {
             message: "تم تعديل معلومات المادة",
             duration: 3000,
           });
+          this.fetch();
         })
         .finally(() => (this.saveLessonLoading = false));
     },
@@ -599,6 +660,36 @@ export default {
           })
           .finally(() => loading.hide());
       }
+    },
+    addTeacher() {
+      if (this.addTeacherForm.teacherName == "") {
+        this.$toast.open({
+          type: "error",
+          message: "يرجى كتابة اسم التدريسي",
+          duration: 3000,
+        });
+        return;
+      }
+      let loading = this.$loading.show();
+      this.$http
+        .post("addTeacher", {
+          teacherName: this.addTeacherForm.teacherName,
+          sectionId: this.userInfo.sectionId,
+        })
+        .then(() => {
+          this.$toast.open({
+            type: "success",
+            message: "تم اضافة التدريسي , يمكنك الان اختياره من القائمة",
+            duration: 3000,
+          });
+          this.addTeacherForm.teacherName = "";
+          this.addTeacherDialog = false;
+          this.getTeachers();
+        })
+        .finally(() => loading.hide());
+    },
+    getTeachers() {
+      this.$http.get("teachers").then((res) => (this.teachers = res.data));
     },
   },
   computed: {
